@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-primary: #ee2b5b;
+  --color-background-light: #f8f6f6;
+  --color-background-dark: #1a0d10;
+  --color-card-dark: #2a151a;
+  --color-border-dark: #3d1f26;
+  --color-surface-dark: #331920;
+  --color-input-dark: #48232c;
+  --color-accent-rose: #c992a0;
+  
+  --font-display: "Inter", "sans-serif";
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  background-color: var(--color-background-light);
+  color: #0f172a;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html.dark {
+  background-color: var(--color-background-dark);
+  color: #f1f5f9;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+@layer utilities {
+  @keyframes pulse-ring {
+    0% { transform: scale(0.33); opacity: 0.8; }
+    80%, 100% { opacity: 0; }
+  }
+  @keyframes scan {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  .animate-scan {
+    animation: scan 3s linear infinite;
+  }
+  .location-pulse::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-color: var(--color-primary);
+    border-radius: 50%;
+    animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  }
+}
