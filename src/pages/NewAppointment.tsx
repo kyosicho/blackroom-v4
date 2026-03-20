@@ -37,53 +37,81 @@ const NewAppointment: React.FC = () => {
   const filteredCustomers = searchQuery.trim() ? searchCustomers(searchQuery) : customers;
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
-  const handleAddCustomer = () => {
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  const handleAddCustomer = async () => {
     if (!newName.trim() || !newPhone.trim()) return;
-    const customer = addCustomer({ name: newName, phone: newPhone });
-    setSelectedCustomerId(customer.id);
-    setShowAddCustomer(false);
-    setNewName('');
-    setNewPhone('');
-    setStep(2);
+    
+    setIsRegistering(true);
+    try {
+      console.log('Registering new customer:', newName);
+      const customer = await addCustomer({ name: newName, phone: newPhone });
+      console.log('Customer registered successfully:', customer.id);
+      
+      setSelectedCustomerId(customer.id);
+      
+      // 상태 반영을 위해 잠깐의 지연을 줍니다.
+      setTimeout(() => {
+        setShowAddCustomer(false);
+        setNewName('');
+        setNewPhone('');
+        setStep(2);
+        setIsRegistering(false);
+      }, 300);
+    } catch (err) {
+      console.error('Customer Registration Failed:', err);
+      alert('고객 등록 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      setIsRegistering(false);
+    }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedCustomerId || !selectedProcedure || !date || !time) return;
     
-    addAppointment({
-      customerId: selectedCustomerId,
-      date,
-      time,
-      procedureType: selectedProcedure,
-      notes,
-      depositPaid,
-      status: 'scheduled'
-    });
-    
-    navigate('/calendar');
+    try {
+      await addAppointment({
+        customerId: selectedCustomerId,
+        date,
+        time,
+        procedureType: selectedProcedure,
+        notes,
+        depositPaid,
+        status: 'scheduled'
+      });
+      
+      navigate('/calendar');
+    } catch (err) {
+      console.error('Save failed:', err);
+      alert('예약 저장 중 오류가 발생했습니다.');
+    }
   };
 
-  const handleSaveAndStart = () => {
+  const handleSaveAndStart = async () => {
     if (!selectedCustomerId || !selectedProcedure || !date || !time || !selectedCustomer) return;
     
-    const appointment = addAppointment({
-      customerId: selectedCustomerId,
-      date,
-      time,
-      procedureType: selectedProcedure,
-      notes,
-      depositPaid,
-      status: 'in-progress'
-    });
+    try {
+      const appointment = await addAppointment({
+        customerId: selectedCustomerId,
+        date,
+        time,
+        procedureType: selectedProcedure,
+        notes,
+        depositPaid,
+        status: 'in-progress'
+      });
 
-    setDraft({
-      customerId: selectedCustomerId,
-      customerName: selectedCustomer.name,
-      procedureType: selectedProcedure,
-      appointmentId: appointment.id
-    });
-    
-    navigate('/consent');
+      setDraft({
+        customerId: selectedCustomerId,
+        customerName: selectedCustomer.name,
+        procedureType: selectedProcedure,
+        appointmentId: appointment.id
+      });
+      
+      navigate('/consent');
+    } catch (err) {
+      console.error('Save and Start failed:', err);
+      alert('예약 저장 및 시작 중 오류가 발생했습니다.');
+    }
   };
 
   return (
@@ -181,6 +209,7 @@ const NewAppointment: React.FC = () => {
                         취소
                       </button>
                       <button 
+                        disabled={isRegistering}
                         onClick={() => {
                           if (!newName.trim() || !newPhone.trim()) {
                             alert('이름과 전화번호를 모두 입력해 주세요.');
@@ -188,13 +217,18 @@ const NewAppointment: React.FC = () => {
                           }
                           handleAddCustomer();
                         }} 
-                        className={`flex-1 py-3 rounded-xl font-bold transition-all transform active:scale-[0.98] ${
+                        className={`flex-1 py-3 rounded-xl font-bold transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 ${
                           newName.trim() && newPhone.trim() 
-                            ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                            ? (isRegistering ? 'bg-primary/50 text-white/50 cursor-wait' : 'bg-primary text-white shadow-lg shadow-primary/20')
                             : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                         }`}
                       >
-                        등록 확인
+                        {isRegistering ? (
+                          <>
+                            <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            등록 중...
+                          </>
+                        ) : '등록 확인'}
                       </button>
                     </div>
                   </div>

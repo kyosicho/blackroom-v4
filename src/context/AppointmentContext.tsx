@@ -8,7 +8,7 @@ interface AppointmentContextType {
   appointments: Appointment[];
   loading: boolean;
   getAppointment: (id: string) => Appointment | null;
-  addAppointment: (data: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => Appointment;
+  addAppointment: (data: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Appointment>;
   updateAppointment: (id: string, data: Partial<Appointment>) => Appointment | null;
   deleteAppointment: (id: string) => boolean;
   getTodayAppointments: () => Appointment[];
@@ -111,7 +111,7 @@ export const AppointmentProvider: React.FC<{ children: ReactNode }> = ({ childre
     return getById<Appointment>(STORAGE_KEYS.APPOINTMENTS, id);
   }, []);
 
-  const addAppointment = useCallback((data: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Appointment => {
+  const addAppointment = useCallback(async (data: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Appointment> => {
     const newAppointment: Appointment = {
       ...data,
       id: generateId(),
@@ -119,11 +119,17 @@ export const AppointmentProvider: React.FC<{ children: ReactNode }> = ({ childre
       createdAt: now(),
       updatedAt: now(),
     };
+    
+    // 로컬 저장
     create(STORAGE_KEYS.APPOINTMENTS, newAppointment);
     
-    // Supabase 백그라운드 싱크
+    // Supabase 싱크
     if (shopId) {
-      supabaseService.upsertAppointment(newAppointment, shopId);
+      try {
+        await supabaseService.upsertAppointment(newAppointment, shopId);
+      } catch (err) {
+        console.error('Appointment Sync Error:', err);
+      }
     }
     
     refreshAppointments();

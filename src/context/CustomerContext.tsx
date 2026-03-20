@@ -8,7 +8,7 @@ interface CustomerContextType {
   customers: Customer[];
   loading: boolean;
   getCustomer: (id: string) => Customer | null;
-  addCustomer: (data: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => Customer;
+  addCustomer: (data: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Customer>;
   updateCustomer: (id: string, data: Partial<Customer>) => Customer | null;
   deleteCustomer: (id: string) => boolean;
   searchCustomers: (query: string) => Customer[];
@@ -98,7 +98,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
     return getById<Customer>(STORAGE_KEYS.CUSTOMERS, id);
   }, []);
 
-  const addCustomer = useCallback((data: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>): Customer => {
+  const addCustomer = useCallback(async (data: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Customer> => {
     const newCustomer: Customer = {
       ...data,
       id: generateId(),
@@ -106,10 +106,17 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
       createdAt: now(),
       updatedAt: now(),
     };
+    
+    // 로컬 저장 (즉각성 보장)
     create(STORAGE_KEYS.CUSTOMERS, newCustomer);
     
+    // Supabase 동기화 (비동기 대기)
     if (shopId) {
-      supabaseService.upsertCustomer(newCustomer, shopId);
+      try {
+        await supabaseService.upsertCustomer(newCustomer, shopId);
+      } catch (err) {
+        console.error('Supabase Sync Error:', err);
+      }
     }
     
     refreshCustomers();
