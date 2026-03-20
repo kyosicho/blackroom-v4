@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Bell, PlusCircle, ChevronRight, TrendingUp } from 'lucide-react';
 import { useCustomers } from '../context/CustomerContext';
 import { useAppointments } from '../context/AppointmentContext';
-import { useRecords } from '../context/RecordContext';
 import { STORAGE_KEYS } from '../services/storageService';
 import { useLanguage } from '../context/LanguageContext';
 import WeeklyCalendar from '../components/WeeklyCalendar';
@@ -12,7 +11,6 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const { searchCustomers } = useCustomers();
   const { appointments } = useAppointments();
-  const { getCompletedCount } = useRecords();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const { t, language } = useLanguage();
@@ -40,9 +38,44 @@ const Home: React.FC = () => {
     return appointments.filter(apt => apt.date === todayStr).length;
   }, [appointments]);
 
-  const completedThisWeek = getCompletedCount();
+  const weeklyStats = useMemo(() => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const stats = [];
+    let completedCount = 0;
+    const maxAppointments = Math.max(...Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      const dStr = d.toISOString().split('T')[0];
+      return appointments.filter(a => a.date === dStr).length;
+    }), 1); // 최소 1로 설정하여 나눗셈 오류 방지
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayAppointments = appointments.filter(a => a.date === dateStr);
+      
+      const count = dayAppointments.length;
+      const completed = dayAppointments.filter(a => a.status === 'completed').length;
+      completedCount += completed;
+
+      stats.push({
+        dayName: ['일', '월', '화', '수', '목', '금', '토'][i],
+        count,
+        height: (count / maxAppointments) * 100,
+        isToday: dateStr === new Date().toISOString().split('T')[0]
+      });
+    }
+
+    return { stats, completedCount };
+  }, [appointments]);
+
   const weeklyGoal = settings.weeklyGoal || 15;
-  const progressPercent = Math.min(100, Math.round((completedThisWeek / weeklyGoal) * 100));
+  const progressPercent = Math.min(100, Math.round((weeklyStats.completedCount / weeklyGoal) * 100));
 
   // 날짜 표시 이름 (오늘이면 '오늘의 일정', 아니면 'M월 D일 일정')
   const scheduleTitle = useMemo(() => {
@@ -98,20 +131,51 @@ const Home: React.FC = () => {
           </p>
         </section>
 
-        {/* 주간 목표 - 실제 데이터 (맨 위로 이동) */}
+        {/* 주간 목표 - 실제 데이터 (막대 그래프 추가) */}
         <section className="mb-8">
           <div className="bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 p-5 rounded-2xl relative overflow-hidden shadow-sm shadow-primary/5">
             <div className="relative z-10">
-              <h4 className="font-bold text-slate-900 dark:text-white mb-1">{t.home.weeklyGoal}</h4>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{completedThisWeek} / {weeklyGoal} {language === 'en' ? 'Completed' : '건 완료'}</p>
-              <div className="w-full bg-slate-200 dark:bg-primary/20 rounded-full h-2">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white mb-1">{t.home.weeklyGoal}</h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{weeklyStats.completedCount} / {weeklyGoal} {language === 'en' ? 'Completed' : '건 완료'}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-primary">{progressPercent}%</span>
+                </div>
+              </div>
+
+              {/* 주간 막대 그래프 */}
+              <div className="flex items-end justify-between h-20 gap-1 mb-4 px-2">
+                {weeklyStats.stats.map((day, idx) => (
+                  <div key={idx} className="flex flex-col items-center gap-1 flex-1">
+                    <div className="w-full bg-slate-100 dark:bg-primary/10 rounded-t-sm relative h-16 flex items-end overflow-hidden">
+                      <div 
+                        className={`w-full transition-all duration-1000 ease-out rounded-t-sm ${day.isToday ? 'bg-primary' : 'bg-primary/30'}`}
+                        style={{ height: `${day.height}%` }}
+                      >
+                        {day.count > 0 && (
+                          <span className={`absolute top-0 left-1/2 -translate-x-1/2 text-[8px] font-bold ${day.isToday ? 'text-primary' : 'text-slate-400'}`}>
+                            {day.count}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-[9px] font-bold ${day.isToday ? 'text-primary' : 'text-slate-400'}`}>
+                      {day.dayName}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="w-full bg-slate-200 dark:bg-primary/20 rounded-full h-1.5">
                 <div
-                  className="bg-primary h-2 rounded-full transition-all duration-700"
+                  className="bg-primary h-1.5 rounded-full transition-all duration-700"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
             </div>
-            <div className="absolute -right-4 -bottom-4 opacity-10">
+            <div className="absolute -right-4 -bottom-4 opacity-5">
               <TrendingUp className="size-20" />
             </div>
           </div>
@@ -165,7 +229,7 @@ const Home: React.FC = () => {
         {/* 새 동의서 작성 (새 시술기록 빨간 버튼) */}
         <section className="mb-10">
           <button
-            onClick={() => navigate('/guide')}
+            onClick={() => navigate('/new-appointment')}
             className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-5 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-3 transition-all transform active:scale-[0.98]"
           >
             <PlusCircle className="size-6" />

@@ -23,6 +23,7 @@ export interface Appointment {
   procedureType: string;
   status: AppointmentStatus;
   notes?: string;
+  depositPaid?: boolean;
   createdAt: string;
   updatedAt: string;
 }

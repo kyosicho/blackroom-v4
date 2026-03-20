@@ -6,20 +6,22 @@ interface WeeklyCalendarProps {
   selectedDate?: string;
   appointments?: { date: string; procedureType: string }[];
   onViewAll?: () => void;
+  hideHeader?: boolean;
 }
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ 
   onDateSelect, 
   selectedDate = new Date().toISOString().split('T')[0],
   appointments = [],
-  onViewAll
+  onViewAll,
+  hideHeader = false
 }) => {
   const days = useMemo(() => {
-    const today = new Date();
+    const baseDate = new Date(selectedDate);
     const result = [];
     
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
+    const startOfWeek = new Date(baseDate);
+    startOfWeek.setDate(baseDate.getDate() - baseDate.getDay());
     
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
@@ -32,27 +34,29 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({
         date: dateStr,
         dayNum: date.getDate(),
         dayName: ['일', '월', '화', '수', '목', '금', '토'][date.getDay()],
-        isToday: dateStr === today.toISOString().split('T')[0],
+        isToday: dateStr === new Date().toISOString().split('T')[0],
         appointments: dayAppointments
       });
     }
     return result;
-  }, [appointments]);
+  }, [appointments, selectedDate]);
 
   return (
-    <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-2xl p-4 mb-8 shadow-sm">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-          <CalendarIcon className="size-4 text-primary" />
-          주간 일정
-        </h3>
-        <button 
-          onClick={onViewAll}
-          className="text-xs font-bold text-primary hover:underline bg-primary/10 px-3 py-1 rounded-full transition-colors"
-        >
-          더보기
-        </button>
-      </div>
+    <div className={`${hideHeader ? '' : 'bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-2xl p-4 mb-8 shadow-sm'}`}>
+      {!hideHeader && (
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <CalendarIcon className="size-4 text-primary" />
+            주간 일정
+          </h3>
+          <button 
+            onClick={onViewAll}
+            className="text-xs font-bold text-primary hover:underline bg-primary/10 px-3 py-1 rounded-full transition-colors"
+          >
+            더보기
+          </button>
+        </div>
+      )}
       
       <div className="grid grid-cols-7 gap-2">
         {days.map((day) => {

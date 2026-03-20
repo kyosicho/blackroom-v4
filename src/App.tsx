@@ -13,8 +13,9 @@ import AppointmentDetail from './pages/AppointmentDetail'
 import Customers from './pages/Customers'
 import CustomerDetail from './pages/CustomerDetail'
 import Calendar from './pages/Calendar'
+import NewAppointment from './pages/NewAppointment'
 import Settings from './pages/Settings'
-import { AuthProvider, useAuth } from './context/AuthContext'
+import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { RecordProvider } from './context/RecordContext'
@@ -25,20 +26,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
-        <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
+  // MVP: 인증 건너뛰기
   return <>{children}</>;
 };
 
@@ -71,6 +59,7 @@ function App() {
                     <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
                     <Route path="/customer/:id" element={<ProtectedRoute><CustomerDetail /></ProtectedRoute>} />
                     <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+                    <Route path="/new-appointment" element={<ProtectedRoute><NewAppointment /></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                     <Route path="/home" element={<Navigate to="/" replace />} />
                   </Routes>

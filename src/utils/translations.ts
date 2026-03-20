@@ -2,10 +2,10 @@ export const translations = {
   ko: {
     nav: {
       home: '홈',
-      calendar: '일정',
+      calendar: '캘린더',
       customers: '고객',
-      guide: '시술 시작',
-      records: '시술 내역',
+      guide: '시술시작',
+      records: '기록',
       settings: '설정',
     },
     settings: {
@@ -33,7 +33,7 @@ export const translations = {
       weeklyGoal: '이번 주 목표',
       cases: '건',
       todaySchedule: '오늘의 일정',
-      newRecord: '새 시술 기록',
+      newRecord: '새 예약',
       noSchedule: '오늘 예정된 일정이 없습니다.',
     }
   },

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, PlayCircle, History, Settings } from 'lucide-react';
+import { Home, Calendar, PlayCircle, History, Settings } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const BottomNav: React.FC = () => {
@@ -10,7 +10,7 @@ const BottomNav: React.FC = () => {
 
   const navItems = [
     { id: 'home', icon: Home, label: t.nav.home, path: '/' },
-    { id: 'customers', icon: Users, label: t.nav.customers, path: '/customers' },
+    { id: 'calendar', icon: Calendar, label: t.nav.calendar, path: '/calendar' },
     { id: 'guide', icon: PlayCircle, label: t.nav.guide, path: '/guide' },
     { id: 'records', icon: History, label: t.nav.records, path: '/records' },
     { id: 'settings', icon: Settings, label: t.nav.settings, path: '/settings' },
