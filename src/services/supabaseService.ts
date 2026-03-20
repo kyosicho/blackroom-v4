@@ -6,6 +6,30 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// 헬퍼: 객체 키 변환 (DB snake_case -> App camelCase)
+const toCamel = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(toCamel);
+  const n: any = {};
+  Object.keys(obj).forEach(k => {
+    const camelK = k.replace(/(_\w)/g, m => m[1].toUpperCase());
+    n[camelK] = toCamel(obj[k]);
+  });
+  return n;
+};
+
+// 헬퍼: 객체 키 변환 (App camelCase -> DB snake_case) 
+const toSnake = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(toSnake);
+  const n: any = {};
+  Object.keys(obj).forEach(k => {
+    const snakeK = k.replace(/[A-Z]/g, m => `_${m.toLowerCase()}`);
+    n[snakeK] = toSnake(obj[k]);
+  });
+  return n;
+};
+
 export const supabaseService = {
   // Customers
   async getCustomers(shopId: string) {
@@ -13,13 +37,14 @@ export const supabaseService = {
       .from('customers')
       .select('*')
       .eq('shop_id', shopId);
-    return { data: data as Customer[] | null, error };
+    return { data: (data ? toCamel(data) : null) as Customer[] | null, error };
   },
 
   async upsertCustomer(customer: Customer, shopId: string) {
+    const dbData = toSnake({ ...customer, shopId });
     const { data, error } = await supabase
       .from('customers')
-      .upsert({ ...customer, shop_id: shopId })
+      .upsert(dbData)
       .select();
     return { data, error };
   },
@@ -30,13 +55,14 @@ export const supabaseService = {
       .from('appointments')
       .select('*')
       .eq('shop_id', shopId);
-    return { data: data as Appointment[] | null, error };
+    return { data: (data ? toCamel(data) : null) as Appointment[] | null, error };
   },
 
   async upsertAppointment(appointment: Appointment, shopId: string) {
+    const dbData = toSnake({ ...appointment, shopId });
     const { data, error } = await supabase
       .from('appointments')
-      .upsert({ ...appointment, shop_id: shopId })
+      .upsert(dbData)
       .select();
     return { data, error };
   },
@@ -47,13 +73,14 @@ export const supabaseService = {
       .from('records')
       .select('*')
       .eq('shop_id', shopId);
-    return { data: data as ProcedureRecord[] | null, error };
+    return { data: (data ? toCamel(data) : null) as ProcedureRecord[] | null, error };
   },
 
   async upsertRecord(record: ProcedureRecord, shopId: string) {
+    const dbRecord = toSnake({ ...record, shopId });
     const { data, error } = await supabase
       .from('records')
-      .upsert({ ...record, shop_id: shopId })
+      .upsert(dbRecord)
       .select();
     return { data, error };
   },
@@ -64,13 +91,14 @@ export const supabaseService = {
       .from('consents')
       .select('*')
       .eq('shop_id', shopId);
-    return { data: data as any[] | null, error };
+    return { data: (data ? toCamel(data) : null) as any[] | null, error };
   },
 
   async upsertConsent(consent: any, shopId: string) {
+    const dbConsent = toSnake({ ...consent, shopId });
     const { data, error } = await supabase
       .from('consents')
-      .upsert({ ...consent, shop_id: shopId })
+      .upsert(dbConsent)
       .select();
     return { data, error };
   },
@@ -82,13 +110,14 @@ export const supabaseService = {
       .select('*')
       .eq('shop_id', shopId)
       .single();
-    return { data: data as AppSettings | null, error };
+    return { data: (data ? toCamel(data) : null) as AppSettings | null, error };
   },
 
   async upsertSettings(settings: AppSettings, shopId: string) {
+    const dbData = toSnake({ ...settings, shopId });
     const { data, error } = await supabase
       .from('settings')
-      .upsert({ ...settings, shop_id: shopId })
+      .upsert(dbData)
       .select();
     return { data, error };
   }
