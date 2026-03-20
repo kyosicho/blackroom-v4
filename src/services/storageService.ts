@@ -89,6 +89,19 @@ export function update<T extends { id: string }>(key: string, id: string, update
   }
 }
 
+export function remove(key: string, id: string): boolean {
+  try {
+    const items = getAll<any>(key);
+    const filtered = items.filter((item) => item.id !== id);
+    if (items.length === filtered.length) return false;
+    localStorage.setItem(key, JSON.stringify(filtered));
+    return true;
+  } catch (e) {
+    console.error(`Failed to remove item ${id} from ${key}:`, e);
+    return false;
+  }
+}
+
 export function clearAll(key: string): void {
   localStorage.removeItem(key);
 }

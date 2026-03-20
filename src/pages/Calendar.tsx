@@ -61,17 +61,6 @@ const Calendar: React.FC = () => {
     touchEnd.current = null;
   };
 
-  const selectedAppointments = useMemo(() => {
-    return appointments.filter(a => a.date === selectedDate);
-  }, [appointments, selectedDate]);
-
-  const scheduleTitle = useMemo(() => {
-    const todayStr = today.toISOString().split('T')[0];
-    if (selectedDate === todayStr) return '오늘의 일정';
-    const d = new Date(selectedDate);
-    return `${d.getMonth() + 1}월 ${d.getDate()}일 일정`;
-  }, [selectedDate, today]);
-
   const daysInMonth = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -127,8 +116,27 @@ const Calendar: React.FC = () => {
     });
   }, [appointments, customers, searchQuery]);
 
+  // 선택된 날짜의 일정 필터링
+  const selectedAppointments = useMemo(() => {
+    return appointments
+      .filter(apt => apt.date === selectedDate)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }, [appointments, selectedDate]);
+
+  const scheduleTitle = useMemo(() => {
+    const d = new Date(selectedDate);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 상세 일정`;
+  }, [selectedDate]);
+
+  const [showDayDetail, setShowDayDetail] = React.useState(false);
+
+  const handleDateClick = (date: string) => {
+    setSelectedDate(date);
+    setShowDayDetail(true);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark">
+    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark overflow-hidden">
       <header className="sticky top-0 z-10 bg-background-light dark:bg-background-dark border-b border-primary/10 p-4 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-primary/10 rounded-full transition-colors text-slate-900 dark:text-slate-100">
           <ArrowLeft className="size-5" />
@@ -179,7 +187,7 @@ const Calendar: React.FC = () => {
                     <button
                       key={apt.id}
                       onClick={() => {
-                        setSelectedDate(apt.date);
+                        handleDateClick(apt.date);
                         setCurrentDate(new Date(apt.date));
                         setSearchQuery('');
                         setShowSearch(false);
@@ -203,7 +211,7 @@ const Calendar: React.FC = () => {
       )}
 
       <main 
-        className="flex-1 p-4 pb-24 touch-pan-y select-none"
+        className="flex-1 p-4 pb-24 touch-pan-y select-none relative"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -212,7 +220,7 @@ const Calendar: React.FC = () => {
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
       >
-        <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-2xl p-4 shadow-sm mb-6">
+        <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-2xl p-4 shadow-sm h-full">
           <div className="flex items-center justify-between mb-6">
             <div className="flex flex-col">
               <div className="flex bg-slate-100 dark:bg-primary/10 p-1 rounded-lg w-fit">
@@ -253,7 +261,7 @@ const Calendar: React.FC = () => {
           </div>
 
           {viewMode === 'month' ? (
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1 h-full max-h-[60vh] overflow-y-auto">
               {daysInMonth.map((dayData, i) => {
                 if (!dayData) return <div key={`empty-${i}`} className="aspect-square" />;
                 
@@ -262,9 +270,9 @@ const Calendar: React.FC = () => {
                 return (
                   <div 
                     key={day} 
-                    onClick={() => setSelectedDate(date)}
-                    className={`min-h-[70px] flex flex-col items-center p-1 rounded-lg border transition-colors cursor-pointer group ${
-                      isSelected ? 'bg-primary border-primary/20 shadow-sm' : 
+                    onClick={() => handleDateClick(date)}
+                    className={`min-h-[70px] flex flex-col items-center p-1 rounded-lg border transition-all cursor-pointer group ${
+                      isSelected ? 'bg-primary border-primary/20 shadow-lg scale-[1.02]' : 
                       isToday ? 'bg-primary/5 border-primary/20' : 'hover:bg-primary/10 border-transparent'
                     }`}
                   >
@@ -300,66 +308,106 @@ const Calendar: React.FC = () => {
           ) : (
             <WeeklyCalendar 
               selectedDate={selectedDate} 
-              onDateSelect={(date: string) => setSelectedDate(date)} 
+              onDateSelect={(date: string) => handleDateClick(date)} 
               appointments={appointments}
               hideHeader
             />
           )}
         </div>
-
-        <section className="mt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-lg">{scheduleTitle}</h3>
-            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">{selectedAppointments.length}건</span>
-          </div>
-          <div className="space-y-3">
-            {selectedAppointments.length > 0 ? (
-              selectedAppointments.map(apt => {
-                const customer = customers.find(c => c.id === apt.customerId);
-                return (
-                  <div 
-                    key={apt.id} 
-                    onClick={() => navigate(`/appointment/${apt.id}`)}
-                    className="bg-white dark:bg-primary/5 p-4 rounded-xl border border-slate-200 dark:border-primary/20 flex justify-between items-center hover:border-primary/40 transition-all cursor-pointer group shadow-sm"
-                  >
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors text-base mb-1">
-                        {apt.procedureType}
-                      </p>
-                      <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-slate-500">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{customer?.name}</span>
-                        <span className="text-slate-400">{customer?.phone}</span>
-                        <span className="size-1 bg-slate-300 rounded-full" />
-                        <span className="font-medium">{apt.time}</span>
-                        {apt.depositPaid ? (
-                          <span className="flex items-center gap-0.5 text-[10px] text-green-600 font-bold bg-green-50 px-1.5 py-0.5 rounded-full">
-                            <span className="size-1.5 bg-green-500 rounded-full" />
-                            입금됨
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">미확인</span>
-                        )}
-                      </div>
-                      {apt.notes && (
-                        <p className="text-[11px] text-slate-400 mt-2 bg-slate-50 dark:bg-primary/10 p-2 rounded-lg border border-slate-100 dark:border-primary/5">
-                          {apt.notes}
-                        </p>
-                      )}
-                    </div>
-                    <ChevronRight className="size-5 text-slate-300 group-hover:text-primary transition-colors shrink-0" />
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-12 bg-slate-100/50 dark:bg-primary/5 rounded-2xl border border-dashed border-slate-200 dark:border-primary/20">
-                <p className="text-slate-500 text-sm">해당 날짜에 예정된 일정이 없습니다.</p>
-              </div>
-            )}
-          </div>
-        </section>
       </main>
 
-      <button className="fixed right-6 bottom-24 size-14 rounded-full bg-primary text-white shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform z-20">
+      {/* 일일 일정 상세 모달 (Slide-up) */}
+      {showDayDetail && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:p-4">
+          <div 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setShowDayDetail(false)}
+          />
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500 ease-out-expo">
+            <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+            
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="font-bold text-2xl text-slate-900 dark:text-white">{scheduleTitle}</h3>
+                  <p className="text-sm text-slate-500 mt-1">{selectedAppointments.length}개의 일정이 있습니다.</p>
+                </div>
+                <button 
+                  onClick={() => setShowDayDetail(false)}
+                  className="size-10 flex items-center justify-center bg-slate-100 dark:bg-white/10 rounded-full text-slate-500 hover:text-primary transition-colors"
+                >
+                  <Plus className="size-6 rotate-45" />
+                </button>
+              </div>
+
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                {selectedAppointments.length > 0 ? (
+                  selectedAppointments.map(apt => {
+                    const customer = customers.find(c => c.id === apt.customerId);
+                    return (
+                      <div 
+                        key={apt.id} 
+                        onClick={() => navigate(`/appointment/${apt.id}`)}
+                        className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/5 flex justify-between items-center hover:border-primary/40 transition-all cursor-pointer group"
+                      >
+                        <div className="flex-1">
+                          <p className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors text-base mb-1">
+                            {apt.procedureType}
+                          </p>
+                          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{customer?.name}</span>
+                            <span className="text-slate-400 font-medium">{apt.time}</span>
+                            {apt.depositPaid ? (
+                              <span className="flex items-center gap-1 text-[10px] text-green-600 font-bold bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full">
+                                <span className="size-1 bg-green-500 rounded-full animate-pulse" />
+                                입금완료
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-full">미확인</span>
+                            )}
+                          </div>
+                        </div>
+                        <ChevronRight className="size-5 text-slate-300 group-hover:text-primary transition-colors" />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-16 bg-slate-50 dark:bg-white/5 rounded-3xl border border-dashed border-slate-200 dark:border-white/10">
+                    <p className="text-slate-400 text-sm">등록된 일정이 없습니다.</p>
+                    <button 
+                      onClick={() => navigate('/new-appointment')}
+                      className="mt-4 px-6 py-2 bg-primary/10 text-primary text-xs font-bold rounded-full hover:bg-primary hover:text-white transition-all"
+                    >
+                      새 예약 만들기
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-8 flex gap-3">
+                <button 
+                  onClick={() => navigate('/new-appointment')}
+                  className="flex-1 py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/30 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                >
+                  <Plus className="size-5" />
+                  새 예약 추가
+                </button>
+                <button 
+                  onClick={() => setShowDayDetail(false)}
+                  className="px-6 py-4 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 rounded-2xl font-bold"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <button 
+        onClick={() => navigate('/new-appointment')}
+        className="fixed right-6 bottom-24 size-14 rounded-full bg-primary text-white shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform z-20"
+      >
         <Plus className="size-7" />
       </button>
     </div>

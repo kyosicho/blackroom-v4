@@ -110,7 +110,7 @@ const NewAppointment: React.FC = () => {
       navigate('/consent');
     } catch (err) {
       console.error('Save and Start failed:', err);
-      alert('예약 저장 및 시작 중 오류가 발생했습니다.');
+      // alert('예약 저장 및 시작 중 오류가 발생했습니다.');
     }
   };
 
@@ -212,7 +212,7 @@ const NewAppointment: React.FC = () => {
                         disabled={isRegistering}
                         onClick={() => {
                           if (!newName.trim() || !newPhone.trim()) {
-                            alert('이름과 전화번호를 모두 입력해 주세요.');
+                            console.warn('이름과 전화번호 미입력');
                             return;
                           }
                           handleAddCustomer();

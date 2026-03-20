@@ -141,7 +141,7 @@ const Consent: React.FC = () => {
       }, 300);
     } catch (err) {
       console.error('Consent Submit Error:', err);
-      alert('서명 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      // alert('서명 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
       setIsSaving(false);
     }
   };
