@@ -48,7 +48,7 @@ const RecordAIScan: React.FC = () => {
   };
 
   const handleSave = () => {
-    updateDraft({
+    const finalData = {
       pigment,
       needle,
       notes,
@@ -56,22 +56,24 @@ const RecordAIScan: React.FC = () => {
       afterImage,
       additionalImages,
       postGuideConfirmed,
-      status: 'completed',
-    });
+      status: 'completed' as const,
+    };
 
-    // 드래프트를 실제 레코드로 저장
-    const saved = saveDraft();
+    // 로컬 상태를 드래프트에 먼저 반영 (후속 작업을 위해)
+    updateDraft(finalData);
+
+    // 최신 데이터를 직접 넘겨서 즉시 저장 (비동기 유실 방지)
+    const saved = saveDraft(finalData);
     if (saved) {
       navigate('/records');
     } else {
-      // 드래프트가 없으면 직접 저장
       alert('시술 기록이 저장되었습니다.');
       navigate('/records');
     }
   };
 
   const handleQuickSave = () => {
-    updateDraft({
+    const finalData = {
       pigment,
       needle,
       notes,
@@ -79,8 +81,9 @@ const RecordAIScan: React.FC = () => {
       afterImage,
       additionalImages,
       postGuideConfirmed,
-    });
-    const saved = saveDraft();
+    };
+    updateDraft(finalData);
+    const saved = saveDraft(finalData);
     if (saved) {
       navigate('/records');
     }

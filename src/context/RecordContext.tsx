@@ -17,7 +17,7 @@ interface RecordContextType {
   setDraft: (data: Partial<ProcedureRecord>) => void;
   updateDraft: (data: Partial<ProcedureRecord>) => void;
   clearDraft: () => void;
-  saveDraft: () => ProcedureRecord | null;
+  saveDraft: (overrides?: Partial<ProcedureRecord>) => ProcedureRecord | null;
   // AI scan result
   setAIScanResult: (result: AIScanResult) => void;
   refreshRecords: () => void;
@@ -108,22 +108,28 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCurrentDraft(null);
   }, []);
 
-  const saveDraft = useCallback((): ProcedureRecord | null => {
-    if (!currentDraft) return null;
+  const saveDraft = useCallback((overrides?: Partial<ProcedureRecord>): ProcedureRecord | null => {
+    if (!currentDraft && !overrides) return null;
+    
+    // 현재 드래프트와 전달받은 overrides를 합쳐서 최종 데이터 생성
+    const finalData = { ...currentDraft, ...overrides };
+    
     const record = addRecord({
-      customerId: currentDraft.customerId || '',
-      customerName: currentDraft.customerName || '',
-      procedureType: currentDraft.procedureType || '',
-      pigment: currentDraft.pigment || '',
-      needle: currentDraft.needle || '',
-      notes: currentDraft.notes || '',
-      additionalImages: currentDraft.additionalImages || [],
-      status: currentDraft.status || 'in-progress',
-      beforeImage: currentDraft.beforeImage,
-      afterImage: currentDraft.afterImage,
-      aiScanResult: currentDraft.aiScanResult,
-      appointmentId: currentDraft.appointmentId,
-      consentId: currentDraft.consentId,
+      customerId: finalData.customerId || '',
+      customerName: finalData.customerName || '',
+      procedureType: finalData.procedureType || '',
+      pigment: finalData.pigment || '',
+      needle: finalData.needle || '',
+      notes: finalData.notes || '',
+      additionalImages: finalData.additionalImages || [],
+      status: finalData.status || 'in-progress',
+      beforeImage: finalData.beforeImage,
+      afterImage: finalData.afterImage,
+      aiScanResult: finalData.aiScanResult,
+      appointmentId: finalData.appointmentId,
+      consentId: finalData.consentId,
+      gpsVerified: finalData.gpsVerified,
+      postGuideConfirmed: finalData.postGuideConfirmed,
     });
     setCurrentDraft(null);
     return record;

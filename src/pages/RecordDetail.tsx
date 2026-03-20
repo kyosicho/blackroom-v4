@@ -1,21 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Edit3, Trash2 } from 'lucide-react';
+import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
-
-const statusLabel: Record<string, string> = {
-  'completed': '시술 완료',
-  'touch-up': '리터치 필요',
-  'consulting': '상담 진행',
-  'in-progress': '시술 진행중',
-};
-
-const statusColor: Record<string, string> = {
-  'completed': 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400',
-  'touch-up': 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400',
-  'consulting': 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
-  'in-progress': 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-};
 
 const RecordDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -63,107 +49,134 @@ const RecordDetail: React.FC = () => {
       <main className="flex-1 overflow-y-auto pb-24">
         {/* 고객 정보 카드 */}
         <section className="px-4 py-4">
-          <div className="flex items-center gap-4 bg-primary/5 dark:bg-primary/10 p-4 rounded-xl border border-primary/10">
-            <div className="size-14 rounded-full bg-primary/20 flex items-center justify-center text-primary text-lg font-bold border-2 border-primary shrink-0">
-              {record.customerName.charAt(0)}
+          <div className="flex items-center gap-4 bg-white dark:bg-[#331920] p-4 rounded-2xl border border-slate-200 dark:border-primary/10 shadow-sm">
+            <div className="relative size-16 shrink-0 rounded-xl overflow-hidden border border-slate-100 dark:border-primary/20 bg-primary/10 flex items-center justify-center shadow-inner">
+              {record.afterImage ? (
+                <img className="w-full h-full object-cover" src={record.afterImage} alt="After" />
+              ) : record.beforeImage ? (
+                <img className="w-full h-full object-cover" src={record.beforeImage} alt="Before" />
+              ) : (
+                <span className="text-primary text-xl font-bold">{record.customerName.charAt(0)}</span>
+              )}
+              {record.afterImage && (
+                <div className="absolute top-0 left-0 bg-primary text-[8px] text-white px-1 font-bold uppercase">After</div>
+              )}
             </div>
             <div className="flex flex-col justify-center flex-1">
-              <p className="text-lg font-bold leading-none mb-1">{record.customerName}</p>
-              <p className="text-primary text-sm font-medium">{record.procedureType}</p>
+              <p className="text-xl font-bold leading-tight mb-1">{record.customerName}</p>
+              <p className="text-primary text-sm font-semibold">{record.procedureType}</p>
             </div>
-            <span className={`text-xs font-bold px-3 py-1 rounded-full ${statusColor[record.status] || statusColor['in-progress']}`}>
-              {statusLabel[record.status] || record.status}
-            </span>
-          </div>
-        </section>
-
-        {/* 시술 정보 */}
-        <section className="px-4 py-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">시술 상세 정보</h3>
-          <div className="space-y-4">
-            <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-xl">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">사용 색소</p>
-              <p className="font-medium">{record.pigment || '미입력'}</p>
-            </div>
-            <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-xl">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">니들 구성</p>
-              <p className="font-medium">{record.needle || '미입력'}</p>
-            </div>
-            <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-xl">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">시술 메모</p>
-              <p className="font-medium text-sm leading-relaxed">{record.notes || '메모 없음'}</p>
+            <div className="flex flex-col items-end gap-1">
+              <p className="text-[10px] text-slate-400 font-medium">{new Date(record.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
         </section>
 
-        {/* AI 스캔 결과 */}
+        {/* 핵심 절차 체크리스트 */}
+        <section className="px-4 py-2">
+          <div className="grid grid-cols-3 gap-3">
+            <div className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${record.gpsVerified ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
+              <MapPin className={`size-5 mb-1 ${record.gpsVerified ? 'text-green-600' : 'text-slate-400'}`} />
+              <span className={`text-[10px] font-bold ${record.gpsVerified ? 'text-green-700' : 'text-slate-500'}`}>GPS 인증</span>
+            </div>
+            <div className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${record.consentId ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
+              <FileCheck className={`size-5 mb-1 ${record.consentId ? 'text-green-600' : 'text-slate-400'}`} />
+              <span className={`text-[10px] font-bold ${record.consentId ? 'text-green-700' : 'text-slate-500'}`}>동의서 서명</span>
+            </div>
+            <div className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${record.postGuideConfirmed ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
+              <Info className={`size-5 mb-1 ${record.postGuideConfirmed ? 'text-green-600' : 'text-slate-400'}`} />
+              <span className={`text-[10px] font-bold ${record.postGuideConfirmed ? 'text-green-700' : 'text-slate-500'}`}>주의사항 안내</span>
+            </div>
+          </div>
+        </section>
+
+        {/* 사진 기록 */}
+        <section className="px-4 py-6">
+          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">시술 사진 기록</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <p className="text-xs font-bold text-slate-500 uppercase">시술 전 (Before)</p>
+              </div>
+              {record.beforeImage ? (
+                <div className="aspect-square rounded-2xl overflow-hidden border border-slate-200 dark:border-primary/20 shadow-sm">
+                  <img src={record.beforeImage} alt="Before" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 dark:border-primary/10 bg-slate-50 dark:bg-primary/5 flex flex-col items-center justify-center">
+                  <Camera className="size-8 text-slate-300 dark:text-primary/20 mb-1" />
+                  <span className="text-[10px] text-slate-300 font-medium">사진 없음</span>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <p className="text-xs font-bold text-primary uppercase">시술 후 (After)</p>
+              </div>
+              {record.afterImage ? (
+                <div className="aspect-square rounded-2xl overflow-hidden border-2 border-primary shadow-md">
+                  <img src={record.afterImage} alt="After" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="aspect-square rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center">
+                  <Camera className="size-8 text-primary/30 mb-1" />
+                  <span className="text-[10px] text-primary/30 font-medium">사진 없음</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 시술 상세 정보 */}
+        <section className="px-4 py-2 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">사용 색소</p>
+              <p className="font-bold text-sm">{record.pigment || '미입력'}</p>
+            </div>
+            <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">니들 구성</p>
+              <p className="font-bold text-sm">{record.needle || '미입력'}</p>
+            </div>
+          </div>
+          <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
+            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">시술 메모</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{record.notes || '작성된 메모가 없습니다.'}</p>
+          </div>
+        </section>
+
+        {/* AI 분석 요약 리포트 */}
         {record.aiScanResult && (
-          <section className="px-4 py-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">AI 분석 결과</h3>
-            <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 p-4 rounded-xl space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-600 dark:text-slate-400">피부 타입</span>
-                <span className="text-sm font-semibold">{record.aiScanResult.skinType}</span>
+          <section className="px-4 py-6">
+            <div className="bg-slate-900 dark:bg-white/5 p-5 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none">
+              <div className="flex items-center gap-2 mb-5">
+                <div className="p-2 bg-primary/20 rounded-xl text-primary">
+                  <Camera className="size-4" />
+                </div>
+                <h3 className="text-white text-sm font-bold">AI Skin Analysis Report</h3>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-600 dark:text-slate-400">수분도</span>
-                <span className="text-sm font-semibold">{record.aiScanResult.hydration}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-600 dark:text-slate-400">민감도</span>
-                <span className="text-sm font-semibold">{record.aiScanResult.sensitivity}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-600 dark:text-slate-400">추천 색소</span>
-                <span className="text-sm font-semibold text-primary">{record.aiScanResult.recommendedPigment}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-600 dark:text-slate-400">추천 니들</span>
-                <span className="text-sm font-semibold text-primary">{record.aiScanResult.recommendedNeedle}</span>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white/10 p-3 rounded-2xl text-center">
+                  <p className="text-[9px] text-white/40 uppercase mb-1">Skin Type</p>
+                  <p className="text-white text-xs font-bold">{record.aiScanResult.skinType}</p>
+                </div>
+                <div className="bg-white/10 p-3 rounded-2xl text-center">
+                  <p className="text-[9px] text-white/40 uppercase mb-1">Hydration</p>
+                  <p className="text-white text-xs font-bold">{record.aiScanResult.hydration}%</p>
+                </div>
+                <div className="bg-white/10 p-3 rounded-2xl text-center">
+                  <p className="text-[9px] text-white/40 uppercase mb-1">Sensitivity</p>
+                  <p className="text-white text-xs font-bold">{record.aiScanResult.sensitivity}</p>
+                </div>
               </div>
             </div>
           </section>
         )}
 
-        {/* 사진 기록 */}
-        <section className="px-4 py-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">사진 기록</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1">시술 전</p>
-              {record.beforeImage ? (
-                <div className="aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-primary/20">
-                  <img src={record.beforeImage} alt="Before" className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="aspect-square rounded-xl border-2 border-dashed border-slate-300 dark:border-primary/20 bg-slate-100 dark:bg-primary/5 flex flex-col items-center justify-center">
-                  <Camera className="size-8 text-slate-400 dark:text-primary/40 mb-1" />
-                  <span className="text-[10px] text-slate-400 dark:text-primary/40 font-medium">사진 없음</span>
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-primary uppercase ml-1">시술 후</p>
-              {record.afterImage ? (
-                <div className="aspect-square rounded-xl overflow-hidden border border-primary">
-                  <img src={record.afterImage} alt="After" className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="aspect-square rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center justify-center">
-                  <Camera className="size-8 text-primary/40 mb-1" />
-                  <span className="text-[10px] text-primary/40 font-medium">사진 없음</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* 메타 정보 */}
-        <section className="px-4 py-4 mb-10">
-          <div className="text-xs text-slate-400 dark:text-slate-500 space-y-1">
-            <p>생성: {new Date(record.createdAt).toLocaleString('ko-KR')}</p>
-            <p>수정: {new Date(record.updatedAt).toLocaleString('ko-KR')}</p>
-          </div>
+        <section className="px-4 py-8 text-center">
+          <p className="text-[10px] text-slate-400 font-medium">
+            시술 기록 ID: {record.id.slice(0, 8).toUpperCase()} • 시술 일시: {new Date(record.createdAt).toLocaleString('ko-KR')}
+          </p>
         </section>
       </main>
     </div>
