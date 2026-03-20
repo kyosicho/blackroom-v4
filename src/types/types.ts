@@ -57,6 +57,8 @@ export interface ProcedureRecord {
   additionalImages: string[];
   aiScanResult?: AIScanResult;
   status: RecordStatus;
+  gpsVerified?: boolean;
+  postGuideConfirmed?: boolean;
   createdAt: string;
   updatedAt: string;
 }

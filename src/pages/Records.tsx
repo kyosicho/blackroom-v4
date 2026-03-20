@@ -1,22 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Plus, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Search, Plus, ChevronRight, MapPin, FileCheck, Info } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
-import type { RecordStatus } from '../types/types';
-
-const statusLabel: Record<RecordStatus, string> = {
-  'completed': 'Completed',
-  'touch-up': 'Touch-up',
-  'consulting': 'Consulting',
-  'in-progress': 'In Progress',
-};
-
-const statusColor: Record<RecordStatus, string> = {
-  'completed': 'bg-primary/10 text-primary',
-  'touch-up': 'bg-primary/10 text-primary',
-  'consulting': 'bg-slate-100 dark:bg-slate-700 text-slate-500',
-  'in-progress': 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600',
-};
 
 type FilterType = 'all' | 'week' | 'month' | '3months';
 
@@ -98,33 +83,66 @@ const Records: React.FC = () => {
       </header>
 
       {/* Record List */}
-      <main className="flex-1 overflow-y-auto px-4 py-2 space-y-3">
+      <main className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
         {filteredRecords.length > 0 ? (
           filteredRecords.map((record) => (
             <div
               key={record.id}
               onClick={() => navigate(`/record/${record.id}`)}
-              className="group flex items-center gap-4 bg-white dark:bg-[#331920] p-3 rounded-xl border border-slate-200 dark:border-primary/10 hover:border-primary/30 transition-all cursor-pointer"
+              className="group flex items-center gap-4 bg-white dark:bg-[#331920] p-3.5 rounded-2xl border border-slate-200 dark:border-primary/10 hover:border-primary/30 transition-all cursor-pointer shadow-sm hover:shadow-md"
             >
-              <div className="relative size-16 shrink-0 rounded-lg overflow-hidden border border-slate-100 dark:border-primary/20 bg-primary/10 flex items-center justify-center">
-                {record.beforeImage ? (
-                  <img className="w-full h-full object-cover" src={record.beforeImage} alt="" />
+              {/* Thumbnail: After -> Before -> Initial */}
+              <div className="relative size-16 shrink-0 rounded-xl overflow-hidden border border-slate-100 dark:border-primary/20 bg-primary/10 flex items-center justify-center shadow-inner">
+                {record.afterImage ? (
+                  <img className="w-full h-full object-cover" src={record.afterImage} alt="After" />
+                ) : record.beforeImage ? (
+                  <img className="w-full h-full object-cover" src={record.beforeImage} alt="Before" />
                 ) : (
                   <span className="text-primary text-xl font-bold">{record.customerName.charAt(0)}</span>
                 )}
+                {record.afterImage && (
+                  <div className="absolute top-0 left-0 bg-primary text-[8px] text-white px-1 font-bold uppercase">After</div>
+                )}
               </div>
+
               <div className="flex flex-col flex-1 min-w-0">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-0.5">
                   <p className="text-slate-900 dark:text-slate-100 text-base font-bold truncate">{record.customerName}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${statusColor[record.status]}`}>
-                    {statusLabel[record.status]}
-                  </span>
                 </div>
-                <p className="text-slate-500 dark:text-[#c992a0] text-xs font-medium mt-0.5">
-                  {new Date(record.createdAt).toLocaleDateString('ko-KR')}
-                </p>
-                <p className="text-slate-700 dark:text-slate-300 text-sm font-normal mt-1 truncate">{record.procedureType}</p>
+                
+                <div className="flex items-center gap-2 mb-1.5">
+                  <p className="text-slate-500 dark:text-[#c992a0] text-xs font-medium">
+                    {new Date(record.createdAt).toLocaleDateString('ko-KR')}
+                  </p>
+                  <span className="size-1 bg-slate-300 dark:bg-primary/20 rounded-full"></span>
+                  <p className="text-primary/80 dark:text-primary/60 text-xs font-bold truncate">{record.procedureType}</p>
+                </div>
+
+                {/* Checklists */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <div className={`p-1 rounded-full ${record.gpsVerified ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                      <MapPin className="size-3" />
+                    </div>
+                    <span className={`text-[10px] font-bold ${record.gpsVerified ? 'text-green-600' : 'text-slate-400'}`}>GPS</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <div className={`p-1 rounded-full ${record.consentId ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                      <FileCheck className="size-3" />
+                    </div>
+                    <span className={`text-[10px] font-bold ${record.consentId ? 'text-green-600' : 'text-slate-400'}`}>동의서</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <div className={`p-1 rounded-full ${record.postGuideConfirmed ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                      <Info className="size-3" />
+                    </div>
+                    <span className={`text-[10px] font-bold ${record.postGuideConfirmed ? 'text-green-600' : 'text-slate-400'}`}>안내</span>
+                  </div>
+                </div>
               </div>
+
               <div className="text-slate-400 group-hover:text-primary transition-colors">
                 <ChevronRight className="size-5" />
               </div>

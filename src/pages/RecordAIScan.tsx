@@ -16,6 +16,7 @@ const RecordAIScan: React.FC = () => {
   const [beforeImage, setBeforeImage] = useState<string | undefined>(currentDraft?.beforeImage);
   const [afterImage, setAfterImage] = useState<string | undefined>(currentDraft?.afterImage);
   const [additionalImages, setAdditionalImages] = useState<string[]>(currentDraft?.additionalImages || []);
+  const [postGuideConfirmed, setPostGuideConfirmed] = useState(currentDraft?.postGuideConfirmed || false);
 
   const handleImageUpload = (file: File, callback: (dataUrl: string) => void) => {
     const reader = new FileReader();
@@ -54,6 +55,7 @@ const RecordAIScan: React.FC = () => {
       beforeImage,
       afterImage,
       additionalImages,
+      postGuideConfirmed,
       status: 'completed',
     });
 
@@ -76,6 +78,7 @@ const RecordAIScan: React.FC = () => {
       beforeImage,
       afterImage,
       additionalImages,
+      postGuideConfirmed,
     });
     const saved = saveDraft();
     if (saved) {
@@ -253,13 +256,27 @@ const RecordAIScan: React.FC = () => {
 
         {/* Complete Section */}
         <section className="px-4 py-4 mb-4">
-          <div className="bg-primary p-6 rounded-2xl shadow-xl shadow-primary/20 flex flex-col items-center text-center">
+          <div className="bg-primary p-6 rounded-3xl shadow-xl shadow-primary/20 flex flex-col items-center text-center">
             <ShieldCheck className="size-10 text-white mb-2" />
             <h4 className="text-white font-bold text-lg">기록 저장 및 서명</h4>
-            <p className="text-white/80 text-sm mb-4">시술을 마무리하기 위해 기록을 완료해 주세요.</p>
+            <p className="text-white/80 text-sm mb-6">시술을 마무리하기 위해 기록을 완료해 주세요.</p>
+            
+            <div className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 flex items-center gap-3 border border-white/20">
+              <input 
+                id="guideConfirm"
+                type="checkbox" 
+                checked={postGuideConfirmed}
+                onChange={(e) => setPostGuideConfirmed(e.target.checked)}
+                className="size-6 rounded-lg border-white/30 bg-transparent text-white focus:ring-white transition-all"
+              />
+              <label htmlFor="guideConfirm" className="text-white font-bold text-sm cursor-pointer">
+                시술 후 주의사항 안내 완료
+              </label>
+            </div>
+
             <button 
               onClick={handleSave}
-              className="w-full bg-white text-primary font-bold py-3 rounded-xl hover:bg-slate-100 transition-colors shadow-lg active:scale-[0.98]"
+              className="w-full bg-white text-primary font-bold py-4 rounded-xl hover:bg-slate-100 transition-colors shadow-lg active:scale-[0.98]"
             >
               시술 완료하기
             </button>

@@ -2,10 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, CheckCircle, Loader2, AlertCircle, RefreshCw, XCircle } from 'lucide-react';
 import Header from '../components/Header';
+import { useRecords } from '../context/RecordContext';
 import gpsAuthImg from '../assets/images/gps_auth.png';
 
 const GPSAuth: React.FC = () => {
   const navigate = useNavigate();
+  const { updateDraft } = useRecords();
   const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
   const [address, setAddress] = useState<string>('위치 파악 중...');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -107,6 +109,7 @@ const GPSAuth: React.FC = () => {
       return;
     }
     
+    updateDraft({ gpsVerified: true });
     setIsVerifying(true);
     setTimeout(() => {
       setIsVerifying(false);
