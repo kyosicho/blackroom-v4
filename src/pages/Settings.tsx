@@ -138,7 +138,7 @@ const Settings: React.FC = () => {
         {/* Features / 기능 설정 */}
         <section>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{language === 'en' ? 'Features' : '기능 설정'}</h3>
-          <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl p-4 space-y-3">
+          <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <MapPin className="size-5 text-primary" />
@@ -154,6 +154,46 @@ const Settings: React.FC = () => {
                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-primary/40 peer-checked:bg-primary"></div>
               </label>
             </div>
+
+            {settings.enableGpsAuth !== false && (
+              <div className="pt-3 border-t border-slate-100 dark:border-primary/10">
+                <p className="text-[11px] text-slate-500 mb-2">
+                  {language === 'en' 
+                    ? 'Register your shop location to verify artist presence.' 
+                    : '현재 위치를 매장 위치로 등록하여 본인 인증 보안을 강화하세요.'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (!navigator.geolocation) {
+                        alert('GPS를 지원하지 않는 브라우저입니다.');
+                        return;
+                      }
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                          save({
+                            shopLatitude: pos.coords.latitude,
+                            shopLongitude: pos.coords.longitude
+                          });
+                          alert('현재 위치가 매장 위치로 등록되었습니다.');
+                        },
+                        (err) => {
+                          alert('위치 정보를 가져오는데 실패했습니다: ' + err.message);
+                        }
+                      );
+                    }}
+                    className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary py-2.5 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    {language === 'en' ? 'Set Current as Shop Location' : '현재 위치를 매장으로 등록'}
+                  </button>
+                  {settings.shopLatitude && (
+                    <span className="bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[10px] font-bold px-2 py-1 rounded">
+                      {language === 'en' ? 'Registered' : '등록됨'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

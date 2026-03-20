@@ -82,6 +82,8 @@ export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   language: 'ko' | 'en';
   enableGpsAuth?: boolean;
+  shopLatitude?: number;
+  shopLongitude?: number;
 }
 
 // 유틸 타입
