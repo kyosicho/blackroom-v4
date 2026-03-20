@@ -8,7 +8,7 @@ interface ConsentContextType {
   consents: Consent[];
   loading: boolean;
   getConsent: (id: string) => Consent | null;
-  addConsent: (data: Omit<Consent, 'id' | 'createdAt'>) => Consent;
+  addConsent: (data: Omit<Consent, 'id' | 'createdAt'>) => Promise<Consent>;
   refreshConsents: () => void;
 }
 
@@ -90,17 +90,24 @@ export const ConsentProvider: React.FC<{ children: ReactNode }> = ({ children })
     return getById<Consent>(STORAGE_KEYS.CONSENTS, id);
   }, []);
 
-  const addConsent = useCallback((data: Omit<Consent, 'id' | 'createdAt'>): Consent => {
+  const addConsent = useCallback(async (data: Omit<Consent, 'id' | 'createdAt'>): Promise<Consent> => {
     const newConsent: Consent = {
       ...data,
       id: generateId(),
       shopId: shopId,
       createdAt: new Date().toISOString(),
     };
+    
+    // 로컬 저장
     create(STORAGE_KEYS.CONSENTS, newConsent);
     
+    // Supabase 싱크
     if (shopId) {
-      supabaseService.upsertConsent(newConsent, shopId);
+      try {
+        await supabaseService.upsertConsent(newConsent, shopId);
+      } catch (err) {
+        console.error('Consent Sync Error:', err);
+      }
     }
     
     refreshConsents();

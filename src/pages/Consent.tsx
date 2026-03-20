@@ -109,7 +109,12 @@ const Consent: React.FC = () => {
 
   const { addConsent } = useConsents();
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleSubmit = async () => {
+    if (isSaving || !hasSigned) return;
+    
+    setIsSaving(true);
     try {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -117,8 +122,8 @@ const Consent: React.FC = () => {
       // 서명 데이터를 base64로 저장
       const signatureData = canvas.toDataURL('image/png');
 
-      // 동의서 레코드 저장 (Context 사용)
-      const consentRecord = addConsent({
+      // 동의서 레코드 저장 (Context 사용) - await 추가!
+      const consentRecord = await addConsent({
         customerId: currentDraft?.customerId || '',
         appointmentId: currentDraft?.appointmentId,
         terms: [agreements.term1, agreements.term2, agreements.term3],
@@ -131,13 +136,13 @@ const Consent: React.FC = () => {
 
       // 잠시 지연하여 상태 반영 보장
       setTimeout(() => {
+        setIsSaving(false);
         navigate('/scan-loading');
-      }, 100);
+      }, 300);
     } catch (err) {
       console.error('Consent Submit Error:', err);
       alert('서명 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
-      // 오류가 발생해도 로컬에는 남아있으므로 내비게이션 시도 (사용자 경험 유지)
-      navigate('/scan-loading');
+      setIsSaving(false);
     }
   };
 

@@ -49,46 +49,44 @@ export function getById<T extends { id: string }>(key: string, id: string): T | 
   return items.find((item) => item.id === id) ?? null;
 }
 
+// ---- Bulk Operations ----
+
+export function setAll<T>(key: string, items: T[]): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(items));
+  } catch (e: any) {
+    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+      console.error('LocalStorage capacity exceeded! Cleaning up old data is recommended.');
+      // 임시 방편으로 가장 오래된 데이터를 지우는 로직을 넣거나 에러만 남김
+    }
+    console.error(`Failed to setAll for ${key}:`, e);
+  }
+}
+
 export function create<T extends { id: string }>(key: string, item: T): T {
-  const items = getAll<T>(key);
-  items.push(item);
-  localStorage.setItem(key, JSON.stringify(items));
+  try {
+    const items = getAll<T>(key);
+    items.push(item);
+    localStorage.setItem(key, JSON.stringify(items));
+  } catch (e) {
+    console.error(`Failed to create item in ${key}:`, e);
+  }
   return item;
 }
 
 export function update<T extends { id: string }>(key: string, id: string, updates: Partial<T>): T | null {
-  const items = getAll<T>(key);
-  const index = items.findIndex((item) => item.id === id);
-  if (index === -1) return null;
-  
-  items[index] = { ...items[index], ...updates };
-  localStorage.setItem(key, JSON.stringify(items));
-  return items[index];
-}
-
-export function remove(key: string, id: string): boolean {
-  const items = getAll<{ id: string }>(key);
-  const filtered = items.filter((item) => item.id !== id);
-  if (filtered.length === items.length) return false;
-  
-  localStorage.setItem(key, JSON.stringify(filtered));
-  return true;
-}
-
-// ---- Query Helpers ----
-
-export function query<T>(key: string, predicate: (item: T) => boolean): T[] {
-  return getAll<T>(key).filter(predicate);
-}
-
-export function count(key: string): number {
-  return getAll(key).length;
-}
-
-// ---- Bulk Operations ----
-
-export function setAll<T>(key: string, items: T[]): void {
-  localStorage.setItem(key, JSON.stringify(items));
+  try {
+    const items = getAll<T>(key);
+    const index = items.findIndex((item) => item.id === id);
+    if (index === -1) return null;
+    
+    items[index] = { ...items[index], ...updates };
+    localStorage.setItem(key, JSON.stringify(items));
+    return items[index];
+  } catch (e) {
+    console.error(`Failed to update item ${id} in ${key}:`, e);
+    return null;
+  }
 }
 
 export function clearAll(key: string): void {
