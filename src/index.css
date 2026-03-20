@@ -2,7 +2,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-primary: #ee2b5b;
+  --color-primary: var(--primary-color, #ee2b5b);
   --color-background-light: #f8f6f6;
   --color-background-dark: #1a0d10;
   --color-card-dark: #2a151a;

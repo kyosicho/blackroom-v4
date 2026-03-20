@@ -22,6 +22,7 @@ import { RecordProvider } from './context/RecordContext'
 import { CustomerProvider } from './context/CustomerContext'
 import { AppointmentProvider } from './context/AppointmentContext'
 import { SettingsProvider } from './context/SettingsContext' // 추가
+import { ConsentProvider } from './context/ConsentContext'; // 추가
 import { Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -40,8 +41,9 @@ function App() {
             <CustomerProvider>
               <AppointmentProvider>
                 <RecordProvider>
-                  <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display flex flex-col max-w-screen-md mx-auto relative shadow-2xl shadow-primary/5">
-                    <main className="flex-1">
+                  <ConsentProvider>
+                    <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display flex flex-col max-w-screen-md mx-auto relative shadow-2xl shadow-primary/5">
+                      <main className="flex-1">
                       <Routes>
                         {/* Public Routes */}
                         <Route path="/login" element={<Login />} />
@@ -74,7 +76,8 @@ function App() {
                       <Route path="*" element={<BottomNav />} />
                     </Routes>
                     
-                  </div>
+                    </div>
+                  </ConsentProvider>
                 </RecordProvider>
               </AppointmentProvider>
             </CustomerProvider>

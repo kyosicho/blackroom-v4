@@ -10,6 +10,7 @@ export interface Customer {
   email?: string;
   notes?: string;
   profileImage?: string;
+  shopId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,6 +25,7 @@ export interface Appointment {
   status: AppointmentStatus;
   notes?: string;
   depositPaid?: boolean;
+  shopId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,6 +39,7 @@ export interface Consent {
   appointmentId?: string;
   terms: boolean[];
   signatureData: string;   // base64 Canvas 이미지
+  shopId?: string;
   signedAt: string;
   createdAt: string;
 }
@@ -59,6 +62,7 @@ export interface ProcedureRecord {
   status: RecordStatus;
   gpsVerified?: boolean;
   postGuideConfirmed?: boolean;
+  shopId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -86,6 +90,8 @@ export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   language: 'ko' | 'en';
   shopMode: ShopMode; // 추가
+  primaryColor?: string; // 추가 (v4)
+  shopId: string; // 추가 (v4)
   enableGpsAuth?: boolean;
   shopLatitude?: number;
   shopLongitude?: number;

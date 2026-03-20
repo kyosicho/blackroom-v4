@@ -3,16 +3,25 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
 import { useSettings } from '../context/SettingsContext';
+import { useCustomers } from '../context/CustomerContext';
+import { useConsents } from '../context/ConsentContext';
 import { getLabelsByMode } from '../utils/constants';
+import LegalConsentForm from '../components/LegalConsentForm';
+
 
 const RecordDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { getRecord, deleteRecord } = useRecords();
-  const { shopMode } = useSettings();
+   const { getRecord, deleteRecord } = useRecords();
+  const { settings, shopMode } = useSettings();
+  const { getCustomer } = useCustomers();
+  const { getConsent } = useConsents();
   const labels = getLabelsByMode(shopMode);
+  const [showConsent, setShowConsent] = React.useState(false);
 
   const record = id ? getRecord(id) : null;
+  const customer = record ? getCustomer(record.customerId) : null;
+  const consent = record?.consentId ? getConsent(record.consentId) : null;
 
   if (!record) {
     return (
@@ -83,9 +92,12 @@ const RecordDetail: React.FC = () => {
               <MapPin className={`size-5 mb-1 ${record.gpsVerified ? 'text-green-600' : 'text-slate-400'}`} />
               <span className={`text-[10px] font-bold ${record.gpsVerified ? 'text-green-700' : 'text-slate-500'}`}>GPS 인증</span>
             </div>
-            <div className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${record.consentId ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
+            <div 
+              onClick={() => consent && setShowConsent(true)}
+              className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all cursor-pointer ${record.consentId ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
               <FileCheck className={`size-5 mb-1 ${record.consentId ? 'text-green-600' : 'text-slate-400'}`} />
               <span className={`text-[10px] font-bold ${record.consentId ? 'text-green-700' : 'text-slate-500'}`}>동의서 서명</span>
+              {record.consentId && <span className="text-[8px] text-green-600 opacity-70 mt-0.5 underline">원본 보기</span>}
             </div>
             <div className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${record.postGuideConfirmed ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
               <Info className={`size-5 mb-1 ${record.postGuideConfirmed ? 'text-green-600' : 'text-slate-400'}`} />
@@ -182,6 +194,25 @@ const RecordDetail: React.FC = () => {
             {labels.procedure} 기록 ID: {record.id.slice(0, 8).toUpperCase()} • {labels.procedure} 일시: {new Date(record.createdAt).toLocaleString('ko-KR')}
           </p>
         </section>
+
+        {/* Consent Modal Overlay */}
+        {showConsent && consent && (
+          <div className="fixed inset-0 z-50 flex flex-col bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="flex justify-between items-center p-4 bg-background-light dark:bg-background-dark border-b border-primary/10">
+              <h3 className="font-bold">동의서 원본 확인</h3>
+              <button onClick={() => setShowConsent(false)} className="text-sm font-bold text-primary">닫기</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-100 dark:bg-slate-900/40">
+              <LegalConsentForm 
+                consent={consent}
+                customer={customer || undefined}
+                shopName={settings.shopName || 'Blackroom Studio'}
+                artistName={settings.artistName || '원장님'}
+              />
+              <div className="h-20" /> {/* Spacer */}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

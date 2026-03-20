@@ -11,6 +11,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<AppSettings['theme']>('dark'); // 기본값 다크모드
+  const [primaryColor, setPrimaryColorState] = useState<string>('#ee2b5b');
 
   useEffect(() => {
     // 1. 설정 불러오기
@@ -19,6 +20,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (data) {
         const parsed = JSON.parse(data) as AppSettings;
         setThemeState(parsed.theme || 'dark');
+        setPrimaryColorState(parsed.primaryColor || '#ee2b5b');
       }
     } catch {
       // ignore
@@ -50,6 +52,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.classList.add(theme);
     }
   }, [theme]);
+
+  useEffect(() => {
+    // 3. 커스텀 컬러 적용
+    const root = window.document.documentElement;
+    root.style.setProperty('--primary-color', primaryColor);
+  }, [primaryColor]);
 
   // 시스템 테마 변경 감지
   useEffect(() => {

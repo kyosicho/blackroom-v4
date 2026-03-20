@@ -204,6 +204,7 @@ const defaultSettings: AppSettings = {
   theme: 'dark',
   language: 'ko',
   shopMode: 'pmu',
+  shopId: 'BLACKROOM-DEMO',
 };
 
 export function initializeSeedData(): void {

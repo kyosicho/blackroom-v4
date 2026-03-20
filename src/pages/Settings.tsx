@@ -59,6 +59,52 @@ const Settings: React.FC = () => {
       </header>
 
       <main className="flex-1 px-4 py-4 max-w-2xl mx-auto w-full space-y-6 pb-32">
+        {/* Shop Sharing (New v4) */}
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">샵 협업 및 공유 설정</h3>
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-primary uppercase mb-1">내 샵 공유 코드</p>
+                <p className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">{settings.shopId}</p>
+              </div>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(settings.shopId);
+                  alert('샵 코드가 복사되었습니다. 직원들과 공유하세요!');
+                }}
+                className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg shadow-primary/20 active:scale-95 transition-transform"
+              >
+                코드 복사
+              </button>
+            </div>
+            <div className="pt-4 border-t border-primary/10">
+              <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+                다른 직원의 기기에서 위 코드를 입력하면 이 샵의 모든 스케줄과 기록을 실시간으로 함께 관리할 수 있습니다.
+              </p>
+              <div className="flex gap-2">
+                <input 
+                  id="targetShopId"
+                  placeholder="공유받은 코드 입력" 
+                  className="flex-1 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                />
+                <button 
+                  onClick={() => {
+                    const code = (document.getElementById('targetShopId') as HTMLInputElement).value;
+                    if (code && confirm(`'${code}' 샵으로 전환하시겠습니까? 기존 데이터가 해당 샵의 데이터로 교체됩니다.`)) {
+                      save({ shopId: code.toUpperCase() });
+                      window.location.reload();
+                    }
+                  }}
+                  className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold px-4 py-2 rounded-lg active:scale-95 transition-transform"
+                >
+                  샵 전환
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Profile */}
         <section>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{t.settings.profile}</h3>
@@ -118,30 +164,76 @@ const Settings: React.FC = () => {
           </div>
         </section>
 
-        {/* Appearance */}
+        {/* Appearance & Themes */}
         <section>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">{t.settings.appearance}</h3>
-          <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-3">
-              {theme === 'dark' ? <Moon className="size-5 text-primary" /> : <Sun className="size-5 text-primary" />}
-              <span className="text-sm font-medium flex-1">{t.settings.theme}</span>
-              <select className="border border-slate-200 dark:border-primary/20 rounded-lg p-2 bg-transparent dark:bg-card-dark outline-none text-sm" value={theme} onChange={(e) => setTheme(e.target.value as AppSettings['theme'])}>
-                <option value="dark">{t.settings.darkMode}</option>
-                <option value="light">{t.settings.lightMode}</option>
-                <option value="system">{t.settings.system}</option>
-              </select>
+          <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl p-4 space-y-5">
+            {/* Theme & Language */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                {theme === 'dark' ? <Moon className="size-5 text-primary" /> : <Sun className="size-5 text-primary" />}
+                <span className="text-sm font-medium flex-1">{t.settings.theme}</span>
+                <select className="border border-slate-200 dark:border-primary/20 rounded-lg p-2 bg-transparent dark:bg-card-dark outline-none text-sm" value={theme} onChange={(e) => setTheme(e.target.value as AppSettings['theme'])}>
+                  <option value="dark">{t.settings.darkMode}</option>
+                  <option value="light">{t.settings.lightMode}</option>
+                  <option value="system">{t.settings.system}</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-3">
+                <Globe className="size-5 text-primary" />
+                <span className="text-sm font-medium flex-1">{t.settings.language}</span>
+                <select className="border border-slate-200 dark:border-primary/20 rounded-lg p-2 bg-transparent dark:bg-card-dark outline-none text-sm" value={language} onChange={(e) => {
+                  const newLang = e.target.value as typeof language;
+                  setLanguage(newLang);
+                  save({ language: newLang });
+                }}>
+                  <option value="ko">한국어</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Globe className="size-5 text-primary" />
-              <span className="text-sm font-medium flex-1">{t.settings.language}</span>
-              <select className="border border-slate-200 dark:border-primary/20 rounded-lg p-2 bg-transparent dark:bg-card-dark outline-none text-sm" value={language} onChange={(e) => {
-                const newLang = e.target.value as typeof language;
-                setLanguage(newLang);
-                save({ language: newLang });
-              }}>
-                <option value="ko">한국어</option>
-                <option value="en">English</option>
-              </select>
+
+            {/* Color Personalization (New v4) */}
+            <div className="pt-4 border-t border-slate-100 dark:border-primary/10">
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 block">포인트 컬러 (Theme Color)</label>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { name: 'Rose', color: '#ee2b5b' },
+                  { name: 'Blue', color: '#2b67ee' },
+                  { name: 'Gold', color: '#eead2b' },
+                  { name: 'Green', color: '#2bee7c' },
+                  { name: 'Purple', color: '#9d2bee' },
+                ].map((c) => (
+                  <button
+                    key={c.color}
+                    onClick={() => {
+                        save({ primaryColor: c.color });
+                        // ThemeContext 업데이트를 위해 강제 리로드 또는 다른 방식 필요할 수 있으나 
+                        // 현재 ThemeContext가 settings를 바라보지 않고 localStorage를 직접 보거나 
+                        // state가 상위에 있으면 즉시 반영됨. 
+                        // (우리는 window.location.reload() 없이 Context 연동 확인)
+                        window.location.reload(); // Context 연동 안될 경우를 위해 안전빵
+                    }}
+                    className={`size-8 rounded-full border-2 transition-transform active:scale-90 ${
+                      (settings.primaryColor || '#ee2b5b') === c.color ? 'border-primary ring-2 ring-primary/20 scale-110' : 'border-transparent'
+                    }`}
+                    style={{ backgroundColor: c.color }}
+                    title={c.name}
+                  />
+                ))}
+                
+                {/* Custom Color Picker */}
+                <div className="relative size-8 rounded-full overflow-hidden border border-slate-200 dark:border-primary/30 active:scale-90 transition-transform">
+                  <input 
+                    type="color" 
+                    className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
+                    value={settings.primaryColor || '#ee2b5b'}
+                    onChange={(e) => save({ primaryColor: e.target.value })}
+                    onBlur={() => window.location.reload()}
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] text-slate-400">샵의 분위기에 맞는 컬러를 선택해보세요.</p>
             </div>
           </div>
         </section>

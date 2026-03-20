@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Edit2 } from 'lucide-react';
 import Header from '../components/Header';
 import { useRecords } from '../context/RecordContext';
-import { STORAGE_KEYS, generateId, now } from '../services/storageService';
-import type { Consent as ConsentType } from '../types/types';
+import { useConsents } from '../context/ConsentContext';
+import { now } from '../services/storageService';
 
 const Consent: React.FC = () => {
   const navigate = useNavigate();
@@ -103,6 +103,8 @@ const Consent: React.FC = () => {
     }
   };
 
+  const { addConsent } = useConsents();
+
   const handleSubmit = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -110,22 +112,14 @@ const Consent: React.FC = () => {
     // 서명 데이터를 base64로 저장
     const signatureData = canvas.toDataURL('image/png');
 
-    // 동의서 레코드 저장
-    const consentRecord: ConsentType = {
-      id: generateId(),
+    // 동의서 레코드 저장 (Context 사용)
+    const consentRecord = addConsent({
       customerId: currentDraft?.customerId || '',
       appointmentId: currentDraft?.appointmentId,
       terms: [agreements.term1, agreements.term2, agreements.term3],
       signatureData,
       signedAt: now(),
-      createdAt: now(),
-    };
-
-    // LocalStorage에 동의서 저장
-    const existing = localStorage.getItem(STORAGE_KEYS.CONSENTS);
-    const consents: ConsentType[] = existing ? JSON.parse(existing) : [];
-    consents.push(consentRecord);
-    localStorage.setItem(STORAGE_KEYS.CONSENTS, JSON.stringify(consents));
+    });
 
     // 드래프트에 동의서 ID 추가
     updateDraft({ consentId: consentRecord.id });

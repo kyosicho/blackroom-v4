@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { ProcedureRecord, AIScanResult } from '../types/types';
-import { STORAGE_KEYS, getAll, getById, create, update, remove, generateId, now } from '../services/storageService';
+import { STORAGE_KEYS, getAll, getById, create, update, remove, generateId, now, setAll } from '../services/storageService';
+import { supabaseService, supabase } from '../services/supabaseService';
+import { useSettings } from './SettingsContext';
 
 interface RecordContextType {
   records: ProcedureRecord[];
@@ -29,6 +31,8 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [records, setRecords] = useState<ProcedureRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDraft, setCurrentDraft] = useState<Partial<ProcedureRecord> | null>(null);
+  const { settings } = useSettings();
+  const shopId = settings.shopId;
 
   const refreshRecords = useCallback(() => {
     const data = getAll<ProcedureRecord>(STORAGE_KEYS.RECORDS);
@@ -37,6 +41,67 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setRecords(data);
     setLoading(false);
   }, []);
+
+  // 1. 초기 Supabase 데이터 로드 & 병합
+  useEffect(() => {
+    if (!shopId) {
+      refreshRecords();
+      return;
+    }
+
+    const syncFromSupabase = async () => {
+      setLoading(true);
+      const { data, error } = await supabaseService.getRecords(shopId);
+      if (!error && data) {
+        const localData = getAll<ProcedureRecord>(STORAGE_KEYS.RECORDS);
+        const map = new Map<string, ProcedureRecord>();
+        localData.forEach(r => map.set(r.id, r));
+        data.forEach(r => map.set(r.id, r));
+        
+        const merged = Array.from(map.values());
+        setAll(STORAGE_KEYS.RECORDS, merged);
+        refreshRecords();
+      } else {
+        refreshRecords();
+      }
+      setLoading(false);
+    };
+
+    syncFromSupabase();
+  }, [shopId, refreshRecords]);
+
+  // 2. 실시간 구독
+  useEffect(() => {
+    if (!shopId) return;
+
+    const channel = supabase
+      .channel('records_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'records', filter: `shop_id=eq.${shopId}` },
+        (payload) => {
+          console.log('Realtime Record Change:', payload);
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const newItem = payload.new as ProcedureRecord;
+            const existing = getAll<ProcedureRecord>(STORAGE_KEYS.RECORDS);
+            const index = existing.findIndex(i => i.id === newItem.id);
+            if (index !== -1) existing[index] = newItem;
+            else existing.push(newItem);
+            setAll(STORAGE_KEYS.RECORDS, existing);
+          } else if (payload.eventType === 'DELETE') {
+            const existing = getAll<ProcedureRecord>(STORAGE_KEYS.RECORDS);
+            const filtered = existing.filter(i => i.id !== payload.old.id);
+            setAll(STORAGE_KEYS.RECORDS, filtered);
+          }
+          refreshRecords();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [shopId, refreshRecords]);
 
   useEffect(() => {
     refreshRecords();
@@ -50,25 +115,41 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const newRecord: ProcedureRecord = {
       ...data,
       id: generateId(),
+      shopId: shopId,
       createdAt: now(),
       updatedAt: now(),
     };
     create(STORAGE_KEYS.RECORDS, newRecord);
+    
+    if (shopId) {
+      supabaseService.upsertRecord(newRecord, shopId);
+    }
+    
     refreshRecords();
     return newRecord;
-  }, [refreshRecords]);
+  }, [refreshRecords, shopId]);
 
   const updateRecord = useCallback((id: string, data: Partial<ProcedureRecord>): ProcedureRecord | null => {
     const result = update<ProcedureRecord>(STORAGE_KEYS.RECORDS, id, { ...data, updatedAt: now() });
-    if (result) refreshRecords();
+    if (result) {
+      if (shopId) {
+        supabaseService.upsertRecord(result, shopId);
+      }
+      refreshRecords();
+    }
     return result;
-  }, [refreshRecords]);
+  }, [refreshRecords, shopId]);
 
   const deleteRecord = useCallback((id: string): boolean => {
     const result = remove(STORAGE_KEYS.RECORDS, id);
-    if (result) refreshRecords();
+    if (result) {
+      if (shopId) {
+        supabase.from('records').delete().eq('id', id).eq('shop_id', shopId).then();
+      }
+      refreshRecords();
+    }
     return result;
-  }, [refreshRecords]);
+  }, [refreshRecords, shopId]);
 
   const getRecordsByCustomer = useCallback((customerId: string): ProcedureRecord[] => {
     return records.filter((r) => r.customerId === customerId);

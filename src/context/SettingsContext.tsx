@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   language: 'ko',
   shopMode: 'pmu',
+  shopId: 'BLACKROOM-DEFAULT',
   enableGpsAuth: true,
 };
 
@@ -29,10 +30,27 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (saved) {
-        setSettings(prev => ({ ...prev, ...JSON.parse(saved) }));
+        let parsedSettings: AppSettings = JSON.parse(saved);
+        // shopId가 없는 기존 유저를 위해 랜덤 아이디 생성
+        if (!parsedSettings.shopId) {
+          parsedSettings.shopId = Math.random().toString(36).substring(2, 8).toUpperCase();
+          localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(parsedSettings));
+        }
+        setSettings(parsedSettings);
+      } else {
+        // 초기 데이터 세팅 시 샵 코드 부여
+        const initial = { ...DEFAULT_SETTINGS }; // DEFAULT_SETTINGS 복사
+        initial.shopId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        setSettings(initial);
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(initial));
       }
     } catch (e) {
-      console.error('Failed to load settings', e);
+      console.error('Failed to load or parse settings from localStorage', e);
+      // 에러 발생 시, 기본 설정에 shopId를 부여하여 사용
+      const initial = { ...DEFAULT_SETTINGS };
+      initial.shopId = Math.random().toString(36).substring(2, 8).toUpperCase();
+      setSettings(initial);
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(initial)); // 에러 시에도 저장
     }
   }, []);
 
