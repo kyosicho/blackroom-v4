@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit2 } from 'lucide-react';
+import { Edit2, RotateCcw } from 'lucide-react';
 import Header from '../components/Header';
 import { useRecords } from '../context/RecordContext';
 import { useConsents } from '../context/ConsentContext';
+import { useSettings } from '../context/SettingsContext';
+import { useCustomers } from '../context/CustomerContext';
 import { now } from '../services/storageService';
+import LegalConsentForm from '../components/LegalConsentForm';
 
 const Consent: React.FC = () => {
   const navigate = useNavigate();
@@ -12,18 +15,21 @@ const Consent: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSigned, setHasSigned] = useState(false);
   const { currentDraft, updateDraft } = useRecords();
-  const [agreements, setAgreements] = useState({
-    term1: false,
-    term2: false,
-    term3: false,
-  });
+  const { settings } = useSettings();
+  const { getCustomer } = useCustomers();
+  const { addConsent } = useConsents();
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, checked } = e.target;
-    setAgreements(prev => ({ ...prev, [id]: checked }));
+  const [terms, setTerms] = useState<boolean[]>([false, false, false]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const customer = currentDraft?.customerId ? getCustomer(currentDraft.customerId) : null;
+  const isAllAgreed = terms.every(t => t);
+
+  const handleCheckboxChange = (index: number, checked: boolean) => {
+    const newTerms = [...terms];
+    newTerms[index] = checked;
+    setTerms(newTerms);
   };
-
-  const isAllAgreed = agreements.term1 && agreements.term2 && agreements.term3;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,6 +46,7 @@ const Consent: React.FC = () => {
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 3.5;
         ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
       }
     };
 
@@ -73,10 +80,8 @@ const Consent: React.FC = () => {
     const { x, y } = getCoordinates(e);
     const ctx = canvasRef.current?.getContext('2d');
     if (ctx) {
-      ctx.strokeStyle = '#ee2b5b';
+      ctx.strokeStyle = '#ee2b5b'; // 서명 시에는 빨간색으로 시인성 확보
       ctx.lineWidth = 3.5;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
       ctx.beginPath();
       ctx.moveTo(x, y);
       setIsDrawing(true);
@@ -98,7 +103,8 @@ const Consent: React.FC = () => {
     setIsDrawing(false);
   };
 
-  const clearCanvas = () => {
+  const clearCanvas = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext('2d');
@@ -107,148 +113,133 @@ const Consent: React.FC = () => {
     }
   };
 
-  const { addConsent } = useConsents();
-
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleSubmit = async () => {
-    if (isSaving || !hasSigned) return;
+    if (isSaving || !hasSigned || !isAllAgreed) return;
     
     setIsSaving(true);
     try {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      // 서명 데이터를 base64로 저장
       const signatureData = canvas.toDataURL('image/png');
 
-      // 동의서 레코드 저장 (Context 사용) - await 추가!
       const consentRecord = await addConsent({
         customerId: currentDraft?.customerId || '',
         appointmentId: currentDraft?.appointmentId,
-        terms: [agreements.term1, agreements.term2, agreements.term3],
+        terms: terms,
         signatureData,
         signedAt: now(),
       });
 
-      // 드래프트에 동의서 ID 추가
       updateDraft({ consentId: consentRecord.id });
 
-      // 잠시 지연하여 상태 반영 보장
       setTimeout(() => {
         setIsSaving(false);
         navigate('/scan-loading');
       }, 300);
     } catch (err) {
       console.error('Consent Submit Error:', err);
-      // alert('서명 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
       setIsSaving(false);
     }
   };
 
+  // 서명 패드 노드 정의
+  const signatureNode = (
+    <div className="relative h-40 sm:h-48 w-full rounded-2xl border-2 border-dashed border-primary/30 bg-white shadow-inner overflow-hidden cursor-crosshair">
+      {!hasSigned && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 pointer-events-none">
+          <Edit2 className="size-10 text-primary mb-2" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Sign Here</span>
+        </div>
+      )}
+      <canvas 
+        ref={canvasRef}
+        onMouseDown={startDrawing}
+        onMouseMove={draw}
+        onMouseUp={stopDrawing}
+        onMouseOut={stopDrawing}
+        onTouchStart={startDrawing}
+        onTouchMove={draw}
+        onTouchEnd={stopDrawing}
+        className="absolute inset-0 w-full h-full touch-none"
+      />
+      {hasSigned && (
+        <button 
+          onClick={clearCanvas}
+          className="absolute bottom-2 right-2 p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-400 hover:text-primary transition-colors shadow-sm active:scale-95"
+          title="서명 지우기"
+        >
+          <RotateCcw className="size-4" />
+        </button>
+      )}
+    </div>
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark">
-      <Header title="시술 동의서" />
+    <div className="flex flex-col min-h-screen bg-slate-100 dark:bg-slate-950">
+      <Header title="시술 동의서 작성" />
       
-      <main className="flex-1 overflow-y-auto pb-48">
-        <div className="p-4">
-          {/* Progress Bar */}
-          <div className="mb-6">
+      <main className="flex-1 overflow-y-auto pb-48 pt-4">
+        <div className="max-w-screen-md mx-auto px-4">
+          {/* Progress Indicator */}
+          <div className="mb-6 px-2">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-primary">2단계 / 전체 4단계</span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">약관 및 조건</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Step 02 / 04</span>
+              <span className="text-xs font-bold text-slate-400">정식 동의서 작성 및 서명</span>
             </div>
-            <div className="h-1.5 w-full bg-slate-200 dark:bg-primary/20 rounded-full overflow-hidden">
-              <div className="h-full bg-primary transition-all duration-500" style={{ width: '50%' }}></div>
+            <div className="h-1.5 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden shadow-inner">
+              <div className="h-full bg-primary transition-all duration-700 ease-out-expo" style={{ width: '50%' }}></div>
             </div>
           </div>
 
-          <section className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold mb-3">시술 동의 안내</h2>
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
-                아래 내용을 주의 깊게 읽어주시기 바랍니다. 서명함으로써 귀하는 PMU/타투 시술과 관련된 알레르기 반응, 감염 및 영구적인 피부 변화 가능성을 포함한 위험 요소를 인지하였음을 동의합니다.
-              </p>
-            </div>
-
-            {/* Agreement List */}
-            <div className="space-y-4">
-              {[
-                { id: 'term1', label: '만 18세 이상이며 약물이나 알코올의 영향을 받지 않은 상태임을 확인합니다.' },
-                { id: 'term2', label: '시술 결과는 피부 타입, 생활 습관 및 사후 관리에 따라 달라질 수 있음을 이해합니다.' },
-                { id: 'term3', label: '질환, 알레르기, 금속 및 색소 민감도 등 모든 의료 정보를 사실대로 고지하였습니다.' },
-              ].map(term => (
-                <div key={term.id} className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5">
-                  <div className="flex items-center h-5">
-                    <input 
-                      id={term.id}
-                      type="checkbox"
-                      checked={agreements[term.id as keyof typeof agreements]}
-                      onChange={handleCheckboxChange}
-                      className="w-5 h-5 rounded border-slate-300 dark:border-primary/40 text-primary focus:ring-primary bg-transparent"
-                    />
-                  </div>
-                  <label className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer" htmlFor={term.id}>
-                    {term.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            {/* Signature Pad */}
-            <div className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">전자 서명</h3>
-              <div className="relative h-48 w-full rounded-xl border-2 border-dashed border-slate-300 dark:border-primary/30 bg-slate-50 dark:bg-primary/10 flex items-center justify-center overflow-hidden">
-                {!hasSigned && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
-                    <Edit2 className="size-12 text-primary" />
-                  </div>
-                )}
-                <canvas 
-                  ref={canvasRef}
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseOut={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
-                  className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
-                />
-                <button 
-                  onClick={clearCanvas}
-                  className="absolute bottom-2 right-2 text-xs font-medium px-3 py-1 bg-slate-200 dark:bg-primary/20 rounded-full text-slate-600 dark:text-slate-300 active:scale-95 transition-transform"
-                >
-                  지우기
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 text-center italic">
-                위 서명을 통해 법적 효력이 있는 전자 서명을 제공합니다.
-              </p>
-            </div>
-          </section>
+          {/* Legal Consent Form (Interactive Mode) */}
+          <div className="shadow-2xl rounded-3xl overflow-hidden mb-8">
+            <LegalConsentForm 
+              customer={customer || undefined}
+              consent={{
+                id: '',
+                customerId: '',
+                terms: terms,
+                signatureData: '',
+                signedAt: now(),
+                createdAt: now()
+              }}
+              shopName={settings.shopName || 'Blackroom Studio'}
+              artistName={settings.artistName || '원장님'}
+              isInteractive={true}
+              onCheckboxChange={handleCheckboxChange}
+              signatureNode={signatureNode}
+            />
+          </div>
+          
+          <div className="px-6 py-4 bg-primary/5 rounded-2xl border border-primary/10 mb-8">
+            <p className="text-xs text-primary/70 leading-relaxed font-medium text-center">
+              문서를 끝까지 읽으신 후 모든 항목에 동의하시고 서명해 주시기 바랍니다. <br/>
+              서명 완료 시 법적 효력을 갖는 전자 문서로 보관됩니다.
+            </p>
+          </div>
         </div>
       </main>
 
-      {/* Footer Actions */}
-      <footer className="fixed bottom-0 w-full max-w-screen-md mx-auto bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-primary/20 p-4 pb-12">
+      {/* Action Footer */}
+      <footer className="fixed bottom-0 w-full max-w-screen-md mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-white/5 p-6 pb-12 z-20">
         <div className="flex gap-4">
           <button 
             onClick={() => navigate(-1)}
-            className="flex-1 py-4 px-6 rounded-xl font-semibold border border-slate-300 dark:border-primary/40 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-primary/5 transition-colors"
+            className="flex-1 py-4 px-6 rounded-2xl font-bold border-2 border-slate-100 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-colors"
           >
-            이전
+            이전 단계
           </button>
           <button 
-            disabled={!isAllAgreed || !hasSigned}
+            disabled={!isAllAgreed || !hasSigned || isSaving}
             onClick={handleSubmit}
-            className={`flex-[2] py-4 px-6 rounded-xl font-semibold text-white shadow-lg transition-all ${
-              isAllAgreed && hasSigned
-                ? 'bg-primary shadow-primary/20 hover:bg-primary/90' 
-                : 'bg-slate-300 dark:bg-slate-700 shadow-none cursor-not-allowed'
+            className={`flex-[2] py-4 px-6 rounded-2xl font-black text-white shadow-xl transition-all ${
+              isAllAgreed && hasSigned && !isSaving
+                ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20 active:scale-95' 
+                : 'bg-slate-200 dark:bg-white/5 text-slate-400 cursor-not-allowed'
             }`}
           >
-            서명 완료
+            {isSaving ? '저장 중...' : '동의 및 서명 완료'}
           </button>
         </div>
       </footer>

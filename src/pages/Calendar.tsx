@@ -323,11 +323,11 @@ const Calendar: React.FC = () => {
             className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => setShowDayDetail(false)}
           />
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500 ease-out-expo">
-            <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500 ease-out-expo h-[85vh] flex flex-col">
+            <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-3 mb-1 sm:hidden shrink-0" />
             
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
+            <div className="p-6 flex flex-col h-full overflow-hidden">
+              <div className="flex items-center justify-between mb-6 shrink-0">
                 <div>
                   <h3 className="font-bold text-2xl text-slate-900 dark:text-white">{scheduleTitle}</h3>
                   <p className="text-sm text-slate-500 mt-1">{selectedAppointments.length}개의 일정이 있습니다.</p>
@@ -340,7 +340,7 @@ const Calendar: React.FC = () => {
                 </button>
               </div>
 
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar pb-6">
                 {selectedAppointments.length > 0 ? (
                   selectedAppointments.map(apt => {
                     const customer = customers.find(c => c.id === apt.customerId);
@@ -348,15 +348,22 @@ const Calendar: React.FC = () => {
                       <div 
                         key={apt.id} 
                         onClick={() => navigate(`/appointment/${apt.id}`)}
-                        className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/5 flex justify-between items-center hover:border-primary/40 transition-all cursor-pointer group"
+                        className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center hover:border-primary/40 transition-all cursor-pointer group"
                       >
-                        <div className="flex-1">
-                          <p className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors text-base mb-1">
+                        {/* 시간을 좌측에 독립적으로 배치 (v4.22) */}
+                        <div className="w-20 shrink-0 border-r border-slate-200 dark:border-white/10 mr-4 pr-4 text-center">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Time</p>
+                          <p className="text-lg font-black text-primary dark:text-primary leading-tight">
+                            {apt.time.split(':')[0]}<span className="text-xs">:</span>{apt.time.split(':')[1]}
+                          </p>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors text-base mb-1 truncate">
                             {apt.procedureType}
                           </p>
                           <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">{customer?.name}</span>
-                            <span className="text-slate-400 font-medium">{apt.time}</span>
+                            <span className="font-bold text-slate-500 dark:text-slate-400">{customer?.name} 고객님</span>
                             {apt.depositPaid ? (
                               <span className="flex items-center gap-1 text-[10px] text-green-600 font-bold bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full">
                                 <span className="size-1 bg-green-500 rounded-full animate-pulse" />
@@ -367,7 +374,7 @@ const Calendar: React.FC = () => {
                             )}
                           </div>
                         </div>
-                        <ChevronRight className="size-5 text-slate-300 group-hover:text-primary transition-colors" />
+                        <ChevronRight className="size-5 text-slate-300 group-hover:text-primary transition-colors shrink-0" />
                       </div>
                     );
                   })
@@ -384,7 +391,7 @@ const Calendar: React.FC = () => {
                 )}
               </div>
 
-              <div className="mt-8 flex gap-3">
+              <div className="pt-6 border-t border-slate-100 dark:border-white/5 shrink-0 flex gap-3">
                 <button 
                   onClick={() => navigate('/new-appointment')}
                   className="flex-1 py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/30 active:scale-95 transition-transform flex items-center justify-center gap-2"
