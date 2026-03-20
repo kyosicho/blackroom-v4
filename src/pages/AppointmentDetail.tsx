@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Calendar, User, FileText, ChevronRight, Edit3, X, Check, CreditCard } from 'lucide-react';
 import { useAppointments } from '../context/AppointmentContext';
 import { useCustomers } from '../context/CustomerContext';
+import { useRecords } from '../context/RecordContext';
 import Header from '../components/Header';
 
 const PROCEDURE_TYPES = [
@@ -21,6 +22,7 @@ const AppointmentDetail: React.FC = () => {
   const navigate = useNavigate();
   const { getAppointment, updateAppointment } = useAppointments();
   const { getCustomer } = useCustomers();
+  const { setDraft } = useRecords();
 
   const appointment = getAppointment(id || '');
   const customer = appointment ? getCustomer(appointment.customerId) : null;
@@ -240,7 +242,17 @@ const AppointmentDetail: React.FC = () => {
             </div>
             {appointment.status !== 'completed' && (
               <button 
-                onClick={() => navigate('/guide')}
+                onClick={() => {
+                  if (customer) {
+                    setDraft({ 
+                      customerId: customer.id, 
+                      customerName: customer.name, 
+                      procedureType: appointment.procedureType, 
+                      appointmentId: appointment.id 
+                    });
+                    navigate('/consent');
+                  }
+                }}
                 className="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 mt-4 active:scale-95 transition-transform"
               >
                 시술 시작하기 (동의서 작성)

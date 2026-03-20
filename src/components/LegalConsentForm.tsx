@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, Printer } from 'lucide-react';
 import type { Customer, Consent } from '../types/types';
 
 interface LegalConsentFormProps {
@@ -13,7 +13,17 @@ interface LegalConsentFormProps {
 
 const LegalConsentForm: React.FC<LegalConsentFormProps> = ({ customer, consent, shopName, artistName, beforeImage, afterImage }) => {
   return (
-    <div className="bg-white text-slate-900 p-8 max-w-2xl mx-auto shadow-xl border border-slate-200 font-serif leading-relaxed">
+    <div className="bg-white text-slate-900 p-8 max-w-2xl mx-auto shadow-xl border border-slate-200 font-serif leading-relaxed relative">
+      {/* Print Button - Only visible on screen */}
+      <button 
+        onClick={() => window.print()}
+        className="absolute top-4 right-4 p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-all no-print flex items-center gap-2 shadow-sm"
+        title="PDF로 저장 / 인쇄"
+      >
+        <Printer className="size-5" />
+        <span className="text-xs font-bold">PDF/인쇄</span>
+      </button>
+
       {/* Header */}
       <div className="text-center border-b-2 border-slate-900 pb-6 mb-8">
         <h1 className="text-2xl font-bold tracking-widest mb-2 italic underline underline-offset-8">시술 동의 및 개인정보 제공 동의서</h1>
@@ -118,7 +128,7 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({ customer, consent, 
           </div>
           <div className="text-center">
             <p className="text-xs mb-1 font-bold">동의자 서명</p>
-            <div className="size-24 border border-slate-300 rounded bg-white flex items-center justify-center p-1">
+            <div className="size-32 border border-slate-300 rounded bg-white flex items-center justify-center p-1">
               {consent.signatureData ? (
                 <img src={consent.signatureData} alt="Signature" className="w-full h-full object-contain" />
               ) : (

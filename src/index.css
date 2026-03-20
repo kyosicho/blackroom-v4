@@ -90,3 +90,31 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body, html {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .min-h-screen {
+    min-height: auto !important;
+  }
+  
+  header, footer, nav, button {
+    display: none !important;
+  }
+  
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .bg-background-light, .bg-background-dark {
+    background: white !important;
+  }
+}

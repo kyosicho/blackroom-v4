@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, UserPlus, Check, Calendar as CalendarIcon, Clock, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Search, UserPlus, Check, Calendar as CalendarIcon, Clock, ChevronRight, FileText } from 'lucide-react';
 import { useCustomers } from '../context/CustomerContext';
 import { useAppointments } from '../context/AppointmentContext';
+import { useRecords } from '../context/RecordContext';
 
 import { useSettings } from '../context/SettingsContext';
 import { getProceduresByMode } from '../utils/constants';
@@ -11,8 +12,9 @@ const NewAppointment: React.FC = () => {
   const navigate = useNavigate();
   const { customers, searchCustomers, addCustomer } = useCustomers();
   const { addAppointment } = useAppointments();
-  const { shopMode } = useSettings(); // 추가
-  const procedureTypes = getProceduresByMode(shopMode); // 동적 목록 생성
+  const { setDraft } = useRecords();
+  const { shopMode } = useSettings(); 
+  const procedureTypes = getProceduresByMode(shopMode); 
   
   const [step, setStep] = useState<1 | 2 | 3>(1);
   
@@ -59,6 +61,29 @@ const NewAppointment: React.FC = () => {
     });
     
     navigate('/calendar');
+  };
+
+  const handleSaveAndStart = () => {
+    if (!selectedCustomerId || !selectedProcedure || !date || !time || !selectedCustomer) return;
+    
+    const appointment = addAppointment({
+      customerId: selectedCustomerId,
+      date,
+      time,
+      procedureType: selectedProcedure,
+      notes,
+      depositPaid,
+      status: 'in-progress'
+    });
+
+    setDraft({
+      customerId: selectedCustomerId,
+      customerName: selectedCustomer.name,
+      procedureType: selectedProcedure,
+      appointmentId: appointment.id
+    });
+    
+    navigate('/consent');
   };
 
   return (
@@ -137,12 +162,40 @@ const NewAppointment: React.FC = () => {
                     신규 고객 등록
                   </button>
                 ) : (
-                  <div className="bg-white dark:bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
-                    <input className="w-full border border-slate-200 dark:border-primary/20 rounded-lg p-3 bg-transparent text-slate-900 dark:text-slate-100" placeholder="이름" value={newName} onChange={e => setNewName(e.target.value)} />
-                    <input className="w-full border border-slate-200 dark:border-primary/20 rounded-lg p-3 bg-transparent text-slate-900 dark:text-slate-100" placeholder="전화번호" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
-                    <div className="flex gap-2">
-                      <button onClick={() => setShowAddCustomer(false)} className="flex-1 py-2 border border-slate-300 rounded-lg">취소</button>
-                      <button onClick={handleAddCustomer} className="flex-1 py-2 bg-primary text-white rounded-lg font-bold">확인</button>
+                  <div className="bg-white dark:bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-4 shadow-sm">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">고객 이름</label>
+                        <input className="w-full border border-slate-200 dark:border-primary/20 rounded-lg p-3 bg-transparent text-slate-900 dark:text-slate-100 placeholder:text-slate-300" placeholder="예: 홍길동" value={newName} onChange={e => setNewName(e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">전화번호</label>
+                        <input className="w-full border border-slate-200 dark:border-primary/20 rounded-lg p-3 bg-transparent text-slate-900 dark:text-slate-100 placeholder:text-slate-300" placeholder="예: 010-1234-5678" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button 
+                        onClick={() => setShowAddCustomer(false)} 
+                        className="flex-1 py-3 border border-slate-300 dark:border-primary/20 rounded-xl text-slate-500 font-medium hover:bg-slate-50 dark:hover:bg-primary/5 transition-colors"
+                      >
+                        취소
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (!newName.trim() || !newPhone.trim()) {
+                            alert('이름과 전화번호를 모두 입력해 주세요.');
+                            return;
+                          }
+                          handleAddCustomer();
+                        }} 
+                        className={`flex-1 py-3 rounded-xl font-bold transition-all transform active:scale-[0.98] ${
+                          newName.trim() && newPhone.trim() 
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                            : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                        }`}
+                      >
+                        등록 확인
+                      </button>
                     </div>
                   </div>
                 )}
@@ -262,13 +315,23 @@ const NewAppointment: React.FC = () => {
               </div>
             </div>
 
-            <button 
-              onClick={handleSave}
-              className="w-full bg-primary text-white font-bold py-5 rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all"
-            >
-              <Check className="size-6" />
-              예약 확정 및 달력 저장
-            </button>
+            <div className="grid grid-cols-1 gap-3 pt-4">
+              <button 
+                onClick={handleSaveAndStart}
+                className="w-full bg-primary text-white font-bold py-5 rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all"
+              >
+                <FileText className="size-6" />
+                예약 확정 후 시술 바로 시작
+              </button>
+
+              <button 
+                onClick={handleSave}
+                className="w-full bg-white dark:bg-primary/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-primary/20 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all"
+              >
+                <Check className="size-5" />
+                예약만 확정 (달력으로)
+              </button>
+            </div>
           </div>
         )}
       </main>

@@ -37,8 +37,8 @@ const Consent: React.FC = () => {
       if (parent) {
         canvas.width = parent.clientWidth;
         canvas.height = parent.clientHeight;
-        ctx.strokeStyle = '#ee2b5b';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3.5;
         ctx.lineCap = 'round';
       }
     };
@@ -73,6 +73,10 @@ const Consent: React.FC = () => {
     const { x, y } = getCoordinates(e);
     const ctx = canvasRef.current?.getContext('2d');
     if (ctx) {
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 4.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       ctx.beginPath();
       ctx.moveTo(x, y);
       setIsDrawing(true);
