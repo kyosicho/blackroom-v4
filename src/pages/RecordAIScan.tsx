@@ -63,6 +63,7 @@ const RecordAIScan: React.FC = () => {
         additionalImages: additionalImages || [],
         postGuideConfirmed,
         status: 'completed' as const,
+        consentId: currentDraft?.consentId,
       };
 
       console.log('Attempting to save record...', finalData);
@@ -94,6 +95,7 @@ const RecordAIScan: React.FC = () => {
       afterImage,
       additionalImages,
       postGuideConfirmed,
+      consentId: currentDraft?.consentId,
     };
     updateDraft(finalData);
     const saved = saveDraft(finalData);

@@ -64,6 +64,32 @@ const Settings: React.FC = () => {
     };
   }, []);
 
+  const hexToHsl = (hex: string) => {
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 4) {
+      r = parseInt(hex[1] + hex[1], 16) / 255;
+      g = parseInt(hex[2] + hex[2], 16) / 255;
+      b = parseInt(hex[3] + hex[3], 16) / 255;
+    } else if (hex.length === 7) {
+      r = parseInt(hex.substring(1, 3), 16) / 255;
+      g = parseInt(hex.substring(3, 5), 16) / 255;
+      b = parseInt(hex.substring(5, 7), 16) / 255;
+    }
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  };
+
   const hslToHex = (h: number, s: number, l: number) => {
     l /= 100;
     const a = s * Math.min(l, 1 - l) / 100;
@@ -241,17 +267,19 @@ const Settings: React.FC = () => {
                   <input 
                     type="range"
                     min="0"
-                    max="255"
+                    max="100"
                     step="1"
                     className="w-full h-2 rounded-lg appearance-none cursor-pointer grayscale-slider"
                     style={{ background: 'linear-gradient(to right, #000, #fff)' }}
                     value={(() => {
-                        const color = settings.themeControlMode === 'background' ? settings.backgroundColor : settings.primaryColor;
-                        return parseInt((color || '#000000').substring(1,3), 16);
+                        const color = settings.themeControlMode === 'background' ? (settings.backgroundColor || '#000000') : (settings.primaryColor || '#ee2b5b');
+                        return hexToHsl(color).l;
                     })()}
                     onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        const hex = `#${val.toString(16).padStart(2, '0').repeat(3)}`;
+                        const l = parseInt(e.target.value);
+                        const currentColor = settings.themeControlMode === 'background' ? (settings.backgroundColor || '#000000') : (settings.primaryColor || '#ee2b5b');
+                        const { h, s } = hexToHsl(currentColor);
+                        const hex = hslToHex(h, s, l);
                         if (settings.themeControlMode === 'background') updateSettings({ backgroundColor: hex });
                         else updateSettings({ primaryColor: hex });
                     }}
@@ -271,9 +299,16 @@ const Settings: React.FC = () => {
                     step="1"
                     className="w-full h-2 rounded-lg appearance-none cursor-pointer hue-slider"
                     style={{ background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)' }}
+                    value={(() => {
+                        const color = settings.themeControlMode === 'background' ? (settings.backgroundColor || '#000000') : (settings.primaryColor || '#ee2b5b');
+                        return hexToHsl(color).h;
+                    })()}
                     onChange={(e) => {
-                        const hue = parseInt(e.target.value);
-                        const hex = hslToHex(hue, 70, 55);
+                        const h = parseInt(e.target.value);
+                        const currentColor = settings.themeControlMode === 'background' ? (settings.backgroundColor || '#000000') : (settings.primaryColor || '#ee2b5b');
+                        const { s, l } = hexToHsl(currentColor);
+                        // s가 0이면(무채색) 색조 변화가 안보이므로 최소 채도 부여
+                        const hex = hslToHex(h, Math.max(s, 20), l);
                         if (settings.themeControlMode === 'background') updateSettings({ backgroundColor: hex });
                         else updateSettings({ primaryColor: hex });
                     }}
