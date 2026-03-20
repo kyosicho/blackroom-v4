@@ -203,6 +203,7 @@ const defaultSettings: AppSettings = {
   weeklyGoal: 15,
   theme: 'dark',
   language: 'ko',
+  shopMode: 'pmu',
 };
 
 export function initializeSeedData(): void {

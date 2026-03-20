@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Search, Plus, ChevronRight, MapPin, FileCheck, Info } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
 import { useSettings } from '../context/SettingsContext';
 import { getLabelsByMode } from '../utils/constants';
@@ -9,6 +12,7 @@ const Records: React.FC = () => {
   const { records, searchRecords } = useRecords();
   const { shopMode } = useSettings();
   const labels = getLabelsByMode(shopMode);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
