@@ -49,6 +49,28 @@ const Settings: React.FC = () => {
     };
   }, []);
 
+  const hslToHex = (h: number, s: number, l: number) => {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = (n: number) => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  };
+
+  const handleGrayscaleChange = (val: number) => {
+    const hex = val.toString(16).padStart(2, '0');
+    const color = `#${hex}${hex}${hex}`;
+    save({ primaryColor: color });
+  };
+
+  const handleHueChange = (h: number) => {
+    const color = hslToHex(h, 80, 55); // 고정 채점/명도로 선명하게
+    save({ primaryColor: color });
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="flex items-center p-4 sticky top-0 bg-background-light dark:bg-background-dark z-10 border-b border-primary/10">
@@ -195,8 +217,7 @@ const Settings: React.FC = () => {
 
             {/* Color Personalization (New v4) */}
             <div className="pt-4 border-t border-slate-100 dark:border-primary/10">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 block">포인트 컬러 (Theme Color)</label>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 mb-6">
                 {[
                   { name: 'Rose', color: '#ee2b5b' },
                   { name: 'Blue', color: '#2b67ee' },
@@ -206,14 +227,7 @@ const Settings: React.FC = () => {
                 ].map((c) => (
                   <button
                     key={c.color}
-                    onClick={() => {
-                        save({ primaryColor: c.color });
-                        // ThemeContext 업데이트를 위해 강제 리로드 또는 다른 방식 필요할 수 있으나 
-                        // 현재 ThemeContext가 settings를 바라보지 않고 localStorage를 직접 보거나 
-                        // state가 상위에 있으면 즉시 반영됨. 
-                        // (우리는 window.location.reload() 없이 Context 연동 확인)
-                        window.location.reload(); // Context 연동 안될 경우를 위해 안전빵
-                    }}
+                    onClick={() => save({ primaryColor: c.color })}
                     className={`size-8 rounded-full border-2 transition-transform active:scale-90 ${
                       (settings.primaryColor || '#ee2b5b') === c.color ? 'border-primary ring-2 ring-primary/20 scale-110' : 'border-transparent'
                     }`}
@@ -229,11 +243,45 @@ const Settings: React.FC = () => {
                     className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
                     value={settings.primaryColor || '#ee2b5b'}
                     onChange={(e) => save({ primaryColor: e.target.value })}
-                    onBlur={() => window.location.reload()}
                   />
                 </div>
               </div>
-              <p className="mt-2 text-[10px] text-slate-400">샵의 분위기에 맞는 컬러를 선택해보세요.</p>
+
+              {/* Slider Enhancements (New v4 UI) */}
+              <div className="space-y-6 mt-4 p-4 bg-slate-50 dark:bg-primary/10 rounded-2xl border border-slate-100 dark:border-primary/5">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-[11px] font-bold text-slate-500">흑백 정교 조절 (Grayscale)</label>
+                    <span className="text-[10px] text-primary font-mono">{settings.primaryColor?.toUpperCase()}</span>
+                  </div>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="255"
+                    step="1"
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer grayscale-slider"
+                    style={{ background: 'linear-gradient(to right, #000, #fff)' }}
+                    onChange={(e) => handleGrayscaleChange(parseInt(e.target.value))}
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-[11px] font-bold text-slate-500">포인트 컬러 슬라이더 (Rainbow Hue)</label>
+                  </div>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="1"
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer hue-slider"
+                    style={{ background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)' }}
+                    onChange={(e) => handleHueChange(parseInt(e.target.value))}
+                  />
+                </div>
+              </div>
+
+              <p className="mt-3 text-[10px] text-slate-400">슬라이더를 밀어서 미세한 색상 차이를 조절해보세요.</p>
             </div>
           </div>
         </section>

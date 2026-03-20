@@ -16,6 +16,50 @@ const Calendar: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showSearch, setShowSearch] = React.useState(false);
   const [viewMode, setViewMode] = React.useState<'month' | 'week'>('month');
+  
+  // Swipe Logic
+  const touchStart = React.useRef<number | null>(null);
+  const touchEnd = React.useRef<number | null>(null);
+  const MIN_SWIPE_DISTANCE = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEnd.current = null;
+    touchStart.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEnd.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart.current || !touchEnd.current) return;
+    const distance = touchStart.current - touchEnd.current;
+    const isLeftSwipe = distance > MIN_SWIPE_DISTANCE;
+    const isRightSwipe = distance < -MIN_SWIPE_DISTANCE;
+
+    if (isLeftSwipe) {
+      changeMonth(1);
+    } else if (isRightSwipe) {
+      changeMonth(-1);
+    }
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    touchEnd.current = null;
+    touchStart.current = e.clientX;
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (touchStart.current !== null) {
+      touchEnd.current = e.clientX;
+    }
+  };
+
+  const onMouseUp = () => {
+    onTouchEnd(); // 기존 터치 엔드 로직 재사용
+    touchStart.current = null;
+    touchEnd.current = null;
+  };
 
   const selectedAppointments = useMemo(() => {
     return appointments.filter(a => a.date === selectedDate);
@@ -158,7 +202,16 @@ const Calendar: React.FC = () => {
         </div>
       )}
 
-      <main className="flex-1 p-4 pb-24">
+      <main 
+        className="flex-1 p-4 pb-24 touch-pan-y select-none"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+      >
         <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-2xl p-4 shadow-sm mb-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex flex-col">

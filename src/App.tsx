@@ -34,8 +34,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <ThemeProvider>
-      <SettingsProvider>
+    <SettingsProvider>
+      <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
             <CustomerProvider>
@@ -83,8 +83,8 @@ function App() {
             </CustomerProvider>
           </AuthProvider>
         </LanguageProvider>
-      </SettingsProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </SettingsProvider>
   )
 }
 

@@ -1,47 +1,24 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { STORAGE_KEYS } from '../services/storageService';
-import type { AppSettings } from '../types/types';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useSettings } from './SettingsContext';
 
 interface ThemeContextType {
-  theme: AppSettings['theme'];
-  setTheme: (theme: AppSettings['theme']) => void;
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<AppSettings['theme']>('dark'); // 기본값 다크모드
-  const [primaryColor, setPrimaryColorState] = useState<string>('#ee2b5b');
+  const { settings, updateSettings } = useSettings();
+  const theme = settings.theme || 'dark';
+  const primaryColor = settings.primaryColor || '#ee2b5b';
 
-  useEffect(() => {
-    // 1. 설정 불러오기
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (data) {
-        const parsed = JSON.parse(data) as AppSettings;
-        setThemeState(parsed.theme || 'dark');
-        setPrimaryColorState(parsed.primaryColor || '#ee2b5b');
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const setTheme = (newTheme: AppSettings['theme']) => {
-    setThemeState(newTheme);
-    // Settings에 저장
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      const parsed = data ? JSON.parse(data) : {};
-      parsed.theme = newTheme;
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(parsed));
-    } catch {
-      // ignore
-    }
+  const setTheme = (newTheme: 'light' | 'dark' | 'system') => {
+    updateSettings({ theme: newTheme });
   };
 
   useEffect(() => {
-    // 2. DOM에 클래스 적용
+    // 1. 다크/라이트 모드 클래스 적용
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
 
@@ -54,7 +31,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [theme]);
 
   useEffect(() => {
-    // 3. 커스텀 컬러 적용
+    // 2. 커스텀 컬러(CSS 변수) 적용
     const root = window.document.documentElement;
     root.style.setProperty('--primary-color', primaryColor);
   }, [primaryColor]);
