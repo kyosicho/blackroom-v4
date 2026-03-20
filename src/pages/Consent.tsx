@@ -73,8 +73,8 @@ const Consent: React.FC = () => {
     const { x, y } = getCoordinates(e);
     const ctx = canvasRef.current?.getContext('2d');
     if (ctx) {
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 4.5;
+      ctx.strokeStyle = '#ee2b5b';
+      ctx.lineWidth = 3.5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();

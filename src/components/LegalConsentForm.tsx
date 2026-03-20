@@ -130,7 +130,12 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({ customer, consent, 
             <p className="text-xs mb-1 font-bold">동의자 서명</p>
             <div className="size-32 border border-slate-300 rounded bg-white flex items-center justify-center p-1">
               {consent.signatureData ? (
-                <img src={consent.signatureData} alt="Signature" className="w-full h-full object-contain" />
+                <img 
+                  src={consent.signatureData} 
+                  alt="Signature" 
+                  className="w-full h-full object-contain" 
+                  style={{ filter: 'grayscale(1) brightness(0) contrast(1.2)' }}
+                />
               ) : (
                 <span className="text-slate-300 text-[10px]">서명 정보 없음</span>
               )}
