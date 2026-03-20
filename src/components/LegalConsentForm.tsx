@@ -7,9 +7,11 @@ interface LegalConsentFormProps {
   consent: Consent;
   shopName: string;
   artistName: string;
+  beforeImage?: string;
+  afterImage?: string;
 }
 
-const LegalConsentForm: React.FC<LegalConsentFormProps> = ({ customer, consent, shopName, artistName }) => {
+const LegalConsentForm: React.FC<LegalConsentFormProps> = ({ customer, consent, shopName, artistName, beforeImage, afterImage }) => {
   return (
     <div className="bg-white text-slate-900 p-8 max-w-2xl mx-auto shadow-xl border border-slate-200 font-serif leading-relaxed">
       {/* Header */}
@@ -77,6 +79,35 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({ customer, consent, 
           <p>수집된 개인정보 및 시술 전/후 사진은 시술 관리 및 포트폴리오(마케팅 포함) 목적으로 활용될 수 있음에 동의합니다. (식별 가능한 얼굴 부위는 제외 요청 가능)</p>
         </section>
       </div>
+
+      {/* Procedure Photos (v4.3 Added) */}
+      {(beforeImage || afterImage) && (
+        <div className="mb-8 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+          <p className="text-[10px] font-bold text-slate-400 uppercase mb-3 text-center">[시술 기록 사진 증명]</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-[9px] text-center text-slate-500 font-bold uppercase">Before</p>
+              <div className="aspect-square border border-slate-200 bg-white rounded overflow-hidden">
+                {beforeImage ? (
+                  <img src={beforeImage} alt="Before" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-300">사진 없음</div>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[9px] text-center text-primary font-bold uppercase">After</p>
+              <div className="aspect-square border border-primary/30 bg-white rounded overflow-hidden shadow-sm">
+                {afterImage ? (
+                  <img src={afterImage} alt="After" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-300">사진 없음</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Signature Area */}
       <div className="border-2 border-slate-900 p-6 rounded-lg bg-slate-50 relative overflow-hidden">

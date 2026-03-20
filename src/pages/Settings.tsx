@@ -1,15 +1,23 @@
 import React, { useMemo } from 'react';
-import { ArrowLeft, Moon, Sun, Globe, Target, Trash2, Download, MapPin } from 'lucide-react';
+import { 
+  Palette, 
+  Globe, 
+  Layout,
+  Settings as SettingsIcon,
+  ArrowLeft,
+  Target,
+  MapPin,
+  Download,
+  Trash2
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { STORAGE_KEYS } from '../services/storageService';
 import type { AppSettings } from '../types/types';
-import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
   const { t, language, setLanguage } = useLanguage();
   const { settings, updateSettings } = useSettings();
   
@@ -40,12 +48,19 @@ const Settings: React.FC = () => {
   };
 
   const dataStats = useMemo(() => {
-    const get = (key: string) => { try { return JSON.parse(localStorage.getItem(key) || '[]').length; } catch { return 0; } };
+    const getCount = (key: string) => {
+      try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data).length : 0;
+      } catch {
+        return 0;
+      }
+    };
     return {
-      customers: get(STORAGE_KEYS.CUSTOMERS),
-      appointments: get(STORAGE_KEYS.APPOINTMENTS),
-      records: get(STORAGE_KEYS.RECORDS),
-      consents: get(STORAGE_KEYS.CONSENTS),
+      customers: getCount(STORAGE_KEYS.CUSTOMERS),
+      appointments: getCount(STORAGE_KEYS.APPOINTMENTS),
+      records: getCount(STORAGE_KEYS.RECORDS),
+      consents: getCount(STORAGE_KEYS.CONSENTS),
     };
   }, []);
 
@@ -58,17 +73,6 @@ const Settings: React.FC = () => {
       return Math.round(255 * color).toString(16).padStart(2, '0');
     };
     return `#${f(0)}${f(8)}${f(4)}`;
-  };
-
-  const handleGrayscaleChange = (val: number) => {
-    const hex = val.toString(16).padStart(2, '0');
-    const color = `#${hex}${hex}${hex}`;
-    save({ primaryColor: color });
-  };
-
-  const handleHueChange = (h: number) => {
-    const color = hslToHex(h, 80, 55); // 고정 채점/명도로 선명하게
-    save({ primaryColor: color });
   };
 
   return (
@@ -193,12 +197,16 @@ const Settings: React.FC = () => {
             {/* Theme & Language */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                {theme === 'dark' ? <Moon className="size-5 text-primary" /> : <Sun className="size-5 text-primary" />}
-                <span className="text-sm font-medium flex-1">{t.settings.theme}</span>
-                <select className="border border-slate-200 dark:border-primary/20 rounded-lg p-2 bg-transparent dark:bg-card-dark outline-none text-sm" value={theme} onChange={(e) => setTheme(e.target.value as AppSettings['theme'])}>
-                  <option value="dark">바탕색 (Dark)</option>
-                  <option value="light">바탕색 (Light)</option>
-                  <option value="system">시스템 (System)</option>
+                {settings.themeControlMode === 'background' ? <Layout className="size-5 text-primary" /> : settings.themeControlMode === 'point' ? <Palette className="size-5 text-primary" /> : <SettingsIcon className="size-5 text-primary" />}
+                <span className="text-sm font-medium flex-1">테마 제어 모드</span>
+                <select 
+                  className="border border-slate-200 dark:border-primary/20 rounded-lg p-2 bg-transparent dark:bg-card-dark outline-none text-sm" 
+                  value={settings.themeControlMode || 'background'} 
+                  onChange={(e) => updateSettings({ themeControlMode: e.target.value as any })}
+                >
+                  <option value="background">1. 바탕색 제어</option>
+                  <option value="point">2. 포인트 컬러 제어</option>
+                  <option value="system">3. 시스템 설정 (자동)</option>
                 </select>
               </div>
               <div className="flex items-center gap-3">
@@ -219,12 +227,16 @@ const Settings: React.FC = () => {
             <div className="pt-4 border-t border-slate-100 dark:border-primary/10">
               <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 block">포인트 컬러 & 정교 조절</label>
               
-              {/* Slider Enhancements (v4.2 Unified UI) */}
+              {/* Slider Enhancements (v4.3 Reactive Control) */}
               <div className="space-y-6 p-4 bg-slate-50 dark:bg-primary/10 rounded-2xl border border-slate-100 dark:border-primary/5">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-[11px] font-bold text-slate-500">포인트 농도 (Grayscale)</label>
-                    <span className="text-[10px] text-primary font-mono">{settings.primaryColor?.toUpperCase()}</span>
+                    <label className="text-[11px] font-bold text-slate-500">
+                      {settings.themeControlMode === 'background' ? '바탕색 농도' : '포인트 농도'} (Grayscale)
+                    </label>
+                    <span className="text-[10px] text-primary font-mono">
+                      {settings.themeControlMode === 'background' ? (settings.backgroundColor?.toUpperCase()) : (settings.primaryColor?.toUpperCase())}
+                    </span>
                   </div>
                   <input 
                     type="range"
@@ -233,13 +245,24 @@ const Settings: React.FC = () => {
                     step="1"
                     className="w-full h-2 rounded-lg appearance-none cursor-pointer grayscale-slider"
                     style={{ background: 'linear-gradient(to right, #000, #fff)' }}
-                    onChange={(e) => handleGrayscaleChange(parseInt(e.target.value))}
+                    value={(() => {
+                        const color = settings.themeControlMode === 'background' ? settings.backgroundColor : settings.primaryColor;
+                        return parseInt((color || '#000000').substring(1,3), 16);
+                    })()}
+                    onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        const hex = `#${val.toString(16).padStart(2, '0').repeat(3)}`;
+                        if (settings.themeControlMode === 'background') updateSettings({ backgroundColor: hex });
+                        else updateSettings({ primaryColor: hex });
+                    }}
                   />
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-[11px] font-bold text-slate-500">포인트 색상 (Rainbow Hue)</label>
+                    <label className="text-[11px] font-bold text-slate-500">
+                      {settings.themeControlMode === 'background' ? '바탕색 색상' : '포인트 색상'} (Rainbow Hue)
+                    </label>
                   </div>
                   <input 
                     type="range"
@@ -248,26 +271,38 @@ const Settings: React.FC = () => {
                     step="1"
                     className="w-full h-2 rounded-lg appearance-none cursor-pointer hue-slider"
                     style={{ background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)' }}
-                    onChange={(e) => handleHueChange(parseInt(e.target.value))}
+                    onChange={(e) => {
+                        const hue = parseInt(e.target.value);
+                        const hex = hslToHex(hue, 70, 55);
+                        if (settings.themeControlMode === 'background') updateSettings({ backgroundColor: hex });
+                        else updateSettings({ primaryColor: hex });
+                    }}
                   />
                 </div>
 
                 {/* Custom Color Picker (Mini) */}
                 <div className="pt-2 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-400">색상 직접 선택:</span>
+                  <span className="text-[10px] text-slate-400">직접 보정:</span>
                   <div className="relative size-6 rounded-full overflow-hidden border border-slate-200 dark:border-primary/30 active:scale-90 transition-transform">
                     <input 
                       type="color" 
                       className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
-                      value={settings.primaryColor || '#ee2b5b'}
-                      onChange={(e) => save({ primaryColor: e.target.value })}
+                      value={(settings.themeControlMode === 'background' ? settings.backgroundColor : settings.primaryColor) || '#ee2b5b'}
+                      onChange={(e) => {
+                          if (settings.themeControlMode === 'background') updateSettings({ backgroundColor: e.target.value });
+                          else updateSettings({ primaryColor: e.target.value });
+                      }}
                     />
                   </div>
                 </div>
               </div>
 
               <p className="mt-3 text-[10px] text-slate-400 leading-relaxed">
-                바탕색 모드와 슬라이더를 조합하여 원장님만의 독창적인 테마를 완성해보세요.
+                {settings.themeControlMode === 'background' 
+                  ? '현재 슬라이더는 앱의 전체 바탕색을 조절합니다.' 
+                  : settings.themeControlMode === 'point' 
+                  ? '현재 슬라이더는 앱의 포인트 강조 색상을 조절합니다.' 
+                  : '시스템 설정 모드에서는 기기 설정에 따라 자동으로 최적화됩니다.'}
               </p>
             </div>
           </div>

@@ -18,6 +18,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   shopMode: 'pmu',
   shopId: 'BLACKROOM-DEFAULT',
   enableGpsAuth: true,
+  themeControlMode: 'background',
+  backgroundColor: '#0f172a', // 기본 어두운 배경 (slate-900)
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

@@ -248,6 +248,8 @@ const RecordDetail: React.FC = () => {
                 customer={customer || undefined}
                 shopName={settings.shopName || 'Blackroom Studio'}
                 artistName={settings.artistName || '원장님'}
+                beforeImage={record.beforeImage}
+                afterImage={record.afterImage}
               />
               <div className="h-20" /> {/* Spacer */}
             </div>

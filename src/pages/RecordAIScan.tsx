@@ -53,22 +53,34 @@ const RecordAIScan: React.FC = () => {
   };
 
   const handleSave = () => {
-    const finalData = {
-      pigment,
-      needle,
-      notes,
-      beforeImage,
-      afterImage,
-      additionalImages,
-      postGuideConfirmed,
-      status: 'completed' as const,
-    };
+    try {
+      const finalData = {
+        pigment: pigment || '',
+        needle: needle || '',
+        notes: notes || '',
+        beforeImage,
+        afterImage,
+        additionalImages: additionalImages || [],
+        postGuideConfirmed,
+        status: 'completed' as const,
+      };
 
-    updateDraft(finalData);
-    const saved = saveDraft(finalData);
-    if (saved) {
-      navigate('/records');
-    } else {
+      console.log('Attempting to save record...', finalData);
+      
+      // draft 업데이트 및 저장 통합 호출
+      updateDraft(finalData);
+      const saved = saveDraft(finalData);
+      
+      if (saved) {
+        console.log('Record saved successfully:', saved.id);
+        navigate('/records');
+      } else {
+        console.warn('saveDraft returned null, navigating anyway');
+        navigate('/records');
+      }
+    } catch (err) {
+      console.error('Error in handleSave:', err);
+      // Fallback navigation to avoid getting stuck
       navigate('/records');
     }
   };

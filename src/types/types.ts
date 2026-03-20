@@ -91,6 +91,8 @@ export interface AppSettings {
   language: 'ko' | 'en';
   shopMode: ShopMode; // 추가
   primaryColor?: string; // 추가 (v4)
+  backgroundColor?: string; // 추가 (v4.3)
+  themeControlMode?: 'background' | 'point' | 'system'; // 추가 (v4.3)
   shopId: string; // 추가 (v4)
   enableGpsAuth?: boolean;
   shopLatitude?: number;
