@@ -196,9 +196,9 @@ const Settings: React.FC = () => {
                 {theme === 'dark' ? <Moon className="size-5 text-primary" /> : <Sun className="size-5 text-primary" />}
                 <span className="text-sm font-medium flex-1">{t.settings.theme}</span>
                 <select className="border border-slate-200 dark:border-primary/20 rounded-lg p-2 bg-transparent dark:bg-card-dark outline-none text-sm" value={theme} onChange={(e) => setTheme(e.target.value as AppSettings['theme'])}>
-                  <option value="dark">{t.settings.darkMode}</option>
-                  <option value="light">{t.settings.lightMode}</option>
-                  <option value="system">{t.settings.system}</option>
+                  <option value="dark">바탕색 (Dark)</option>
+                  <option value="light">바탕색 (Light)</option>
+                  <option value="system">시스템 (System)</option>
                 </select>
               </div>
               <div className="flex items-center gap-3">
@@ -215,43 +215,15 @@ const Settings: React.FC = () => {
               </div>
             </div>
 
-            {/* Color Personalization (New v4) */}
+            {/* Color Personalization (v4.2 Optimized) */}
             <div className="pt-4 border-t border-slate-100 dark:border-primary/10">
-              <div className="flex flex-wrap gap-3 mb-6">
-                {[
-                  { name: 'Rose', color: '#ee2b5b' },
-                  { name: 'Blue', color: '#2b67ee' },
-                  { name: 'Gold', color: '#eead2b' },
-                  { name: 'Green', color: '#2bee7c' },
-                  { name: 'Purple', color: '#9d2bee' },
-                ].map((c) => (
-                  <button
-                    key={c.color}
-                    onClick={() => save({ primaryColor: c.color })}
-                    className={`size-8 rounded-full border-2 transition-transform active:scale-90 ${
-                      (settings.primaryColor || '#ee2b5b') === c.color ? 'border-primary ring-2 ring-primary/20 scale-110' : 'border-transparent'
-                    }`}
-                    style={{ backgroundColor: c.color }}
-                    title={c.name}
-                  />
-                ))}
-                
-                {/* Custom Color Picker */}
-                <div className="relative size-8 rounded-full overflow-hidden border border-slate-200 dark:border-primary/30 active:scale-90 transition-transform">
-                  <input 
-                    type="color" 
-                    className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
-                    value={settings.primaryColor || '#ee2b5b'}
-                    onChange={(e) => save({ primaryColor: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Slider Enhancements (New v4 UI) */}
-              <div className="space-y-6 mt-4 p-4 bg-slate-50 dark:bg-primary/10 rounded-2xl border border-slate-100 dark:border-primary/5">
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 block">포인트 컬러 & 정교 조절</label>
+              
+              {/* Slider Enhancements (v4.2 Unified UI) */}
+              <div className="space-y-6 p-4 bg-slate-50 dark:bg-primary/10 rounded-2xl border border-slate-100 dark:border-primary/5">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-[11px] font-bold text-slate-500">흑백 정교 조절 (Grayscale)</label>
+                    <label className="text-[11px] font-bold text-slate-500">포인트 농도 (Grayscale)</label>
                     <span className="text-[10px] text-primary font-mono">{settings.primaryColor?.toUpperCase()}</span>
                   </div>
                   <input 
@@ -267,7 +239,7 @@ const Settings: React.FC = () => {
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-[11px] font-bold text-slate-500">포인트 컬러 슬라이더 (Rainbow Hue)</label>
+                    <label className="text-[11px] font-bold text-slate-500">포인트 색상 (Rainbow Hue)</label>
                   </div>
                   <input 
                     type="range"
@@ -279,9 +251,24 @@ const Settings: React.FC = () => {
                     onChange={(e) => handleHueChange(parseInt(e.target.value))}
                   />
                 </div>
+
+                {/* Custom Color Picker (Mini) */}
+                <div className="pt-2 flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400">색상 직접 선택:</span>
+                  <div className="relative size-6 rounded-full overflow-hidden border border-slate-200 dark:border-primary/30 active:scale-90 transition-transform">
+                    <input 
+                      type="color" 
+                      className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
+                      value={settings.primaryColor || '#ee2b5b'}
+                      onChange={(e) => save({ primaryColor: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <p className="mt-3 text-[10px] text-slate-400">슬라이더를 밀어서 미세한 색상 차이를 조절해보세요.</p>
+              <p className="mt-3 text-[10px] text-slate-400 leading-relaxed">
+                바탕색 모드와 슬라이더를 조합하여 원장님만의 독창적인 테마를 완성해보세요.
+              </p>
             </div>
           </div>
         </section>

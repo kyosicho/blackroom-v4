@@ -7,6 +7,7 @@ import { useCustomers } from '../context/CustomerContext';
 import { useConsents } from '../context/ConsentContext';
 import { getLabelsByMode } from '../utils/constants';
 import LegalConsentForm from '../components/LegalConsentForm';
+import { ChevronRight } from 'lucide-react';
 
 
 const RecordDetail: React.FC = () => {
@@ -158,6 +159,45 @@ const RecordDetail: React.FC = () => {
           <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
             <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">{labels.procedure} 메모</p>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{record.notes || '작성된 메모가 없습니다.'}</p>
+          </div>
+        </section>
+
+        {/* 법적 동의서 섹션 (v4.2 Enhanced) */}
+        <section className="px-4 py-6">
+          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">보안 및 법적 서류</h3>
+          <div 
+            onClick={() => consent && setShowConsent(true)}
+            className={`group relative overflow-hidden bg-white dark:bg-primary/5 border transition-all rounded-3xl p-6 cursor-pointer shadow-sm ${
+              record.consentId 
+                ? 'border-green-200 dark:border-green-900/40' 
+                : 'border-slate-200 dark:border-primary/10'
+            }`}
+          >
+            <div className="flex items-center gap-5">
+              <div className={`p-4 rounded-2xl ${record.consentId ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                <FileCheck className="size-8" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-lg mb-1">{labels.procedure} 동의서</h4>
+                {record.consentId ? (
+                  <div className="space-y-1">
+                    <p className="text-sm text-green-600 font-bold flex items-center gap-1">
+                      <span className="size-1.5 bg-green-500 rounded-full animate-pulse" />
+                      법적 서명 완료
+                    </p>
+                    <p className="text-[11px] text-slate-400">원본 문서를 보려면 여기를 터치하세요.</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 font-medium">작성된 동의서가 없습니다.</p>
+                )}
+              </div>
+              <ChevronRight className={`size-6 transition-transform group-hover:translate-x-1 ${record.consentId ? 'text-green-300' : 'text-slate-300'}`} />
+            </div>
+            
+            {/* 배경 문양 (전문성 강조) */}
+            <div className="absolute -right-4 -bottom-4 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+              <FileCheck className="size-32 rotate-12" />
+            </div>
           </div>
         </section>
 
