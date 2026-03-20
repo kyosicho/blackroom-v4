@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Plus, ChevronRight, MapPin, FileCheck, Info } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
+import { useSettings } from '../context/SettingsContext';
+import { getLabelsByMode } from '../utils/constants';
 
 type FilterType = 'all' | 'week' | 'month' | '3months';
 
 const Records: React.FC = () => {
   const navigate = useNavigate();
   const { records, searchRecords } = useRecords();
+  const { shopMode } = useSettings();
+  const labels = getLabelsByMode(shopMode);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
@@ -45,7 +46,7 @@ const Records: React.FC = () => {
           >
             <ArrowLeft className="size-5" />
           </button>
-          <h1 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">시술 기록 목록</h1>
+          <h1 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">{labels.procedure} 기록 목록</h1>
         </div>
 
         {/* Search */}
@@ -56,7 +57,7 @@ const Records: React.FC = () => {
             </div>
             <input
               className="flex w-full border-none bg-transparent focus:ring-0 text-base font-normal placeholder:text-slate-500 dark:placeholder:text-[#c992a0]/60 outline-none px-3"
-              placeholder="고객명 또는 시술명 검색"
+              placeholder={`고객명 또는 ${labels.procedure}명 검색`}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -151,7 +152,7 @@ const Records: React.FC = () => {
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-slate-500 dark:text-slate-400">
             <p className="text-lg font-semibold mb-2">기록이 없습니다</p>
-            <p className="text-sm">새 시술을 시작하여 기록을 추가하세요</p>
+            <p className="text-sm">새 {labels.procedure}을 시작하여 기록을 추가하세요</p>
           </div>
         )}
       </main>

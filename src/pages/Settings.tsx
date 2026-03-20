@@ -1,41 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { ArrowLeft, Moon, Sun, Globe, Target, Trash2, Download, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { STORAGE_KEYS } from '../services/storageService';
 import type { AppSettings } from '../types/types';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useSettings } from '../context/SettingsContext';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { t, language, setLanguage } = useLanguage();
+  const { settings, updateSettings } = useSettings();
   
-  const [settings, setSettings] = useState<AppSettings>({
-    artistName: '원장님',
-    shopName: 'BLACKROOM',
-    weeklyGoal: 15,
-    theme: 'dark',
-    language: language,
-    enableGpsAuth: true,
-  });
-
-  useEffect(() => {
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (data) setSettings(JSON.parse(data));
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    // Keep local settings state in sync with the global theme context
-    setSettings(prev => ({ ...prev, theme }));
-  }, [theme]);
-
   const save = (updates: Partial<AppSettings>) => {
-    const updated = { ...settings, ...updates };
-    setSettings(updated);
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
+    updateSettings(updates);
   };
 
   const handleResetData = () => {
@@ -93,6 +72,38 @@ const Settings: React.FC = () => {
               <input className="w-full border border-slate-200 dark:border-primary/20 rounded-lg p-3 bg-transparent outline-none focus:ring-2 focus:ring-primary" value={settings.shopName} onChange={(e) => save({ shopName: e.target.value })} />
             </div>
           </div>
+        </section>
+
+        {/* Shop Mode / 샵 유형 설정 (New) */}
+        <section>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">샵 유형 설정</h3>
+          <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-2xl p-1.5 flex gap-1.5">
+            <button
+              onClick={() => save({ shopMode: 'pmu' })}
+              className={`flex-1 py-3.5 rounded-xl flex flex-col items-center justify-center transition-all ${
+                settings.shopMode === 'pmu'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-primary/5'
+              }`}
+            >
+              <span className="text-sm">반영구 센터</span>
+              <span className="text-[10px] opacity-60 font-medium">Eyebrow & Lip</span>
+            </button>
+            <button
+              onClick={() => save({ shopMode: 'tattoo' })}
+              className={`flex-1 py-3.5 rounded-xl flex flex-col items-center justify-center transition-all ${
+                settings.shopMode === 'tattoo'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-primary/5'
+              }`}
+            >
+              <span className="text-sm">타투 스튜디오</span>
+              <span className="text-[10px] opacity-60 font-medium">Fine Line & Work</span>
+            </button>
+          </div>
+          <p className="mt-2.5 px-1 text-[11px] text-slate-400 font-medium leading-relaxed">
+            유형에 따라 시술 항목과 용어(색소/잉크 등)가 자동으로 최적화됩니다.
+          </p>
         </section>
 
         {/* Goals */}

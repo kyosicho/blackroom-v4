@@ -2,10 +2,15 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Sparkles, Camera, Plus, ShieldCheck, X } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
+import { useSettings } from '../context/SettingsContext';
+import { getLabelsByMode } from '../utils/constants';
 
 const RecordAIScan: React.FC = () => {
   const navigate = useNavigate();
   const { currentDraft, updateDraft, saveDraft } = useRecords();
+  const { shopMode } = useSettings();
+  const labels = getLabelsByMode(shopMode);
+
   const beforeImageRef = useRef<HTMLInputElement>(null);
   const afterImageRef = useRef<HTMLInputElement>(null);
   const additionalImageRef = useRef<HTMLInputElement>(null);
@@ -59,15 +64,11 @@ const RecordAIScan: React.FC = () => {
       status: 'completed' as const,
     };
 
-    // 로컬 상태를 드래프트에 먼저 반영 (후속 작업을 위해)
     updateDraft(finalData);
-
-    // 최신 데이터를 직접 넘겨서 즉시 저장 (비동기 유실 방지)
     const saved = saveDraft(finalData);
     if (saved) {
       navigate('/records');
     } else {
-      alert('시술 기록이 저장되었습니다.');
       navigate('/records');
     }
   };
@@ -98,7 +99,7 @@ const RecordAIScan: React.FC = () => {
         >
           <ArrowLeft className="size-6" />
         </button>
-        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1">새 시술 기록</h2>
+        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1">새 {labels.procedure} 기록</h2>
         <div className="flex w-12 items-center justify-end">
           <button 
             onClick={handleQuickSave} 
@@ -119,18 +120,18 @@ const RecordAIScan: React.FC = () => {
             </div>
             <div className="flex flex-col justify-center">
               <p className="text-lg font-bold leading-none mb-1">{currentDraft?.customerName || '고객 미선택'}</p>
-              <p className="text-primary text-sm font-medium">{currentDraft?.procedureType || '시술 미선택'}</p>
+              <p className="text-primary text-sm font-medium">{currentDraft?.procedureType || `${labels.procedure} 미선택`}</p>
             </div>
           </div>
         </section>
 
         {/* Procedure Details */}
         <section className="px-4 py-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">시술 상세 정보</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">{labels.procedure} 상세 정보</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-1.5 ml-1">
-                <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">사용 색소</span>
+                <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">사용 {labels.pigment}</span>
                 <button 
                   onClick={() => navigate('/scan-loading')}
                   className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
@@ -143,7 +144,7 @@ const RecordAIScan: React.FC = () => {
                 className="block w-full rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary h-12 px-4 outline-none transition-all" 
                 value={pigment}
                 onChange={(e) => setPigment(e.target.value)}
-                placeholder="예: EB22 다크 브라운"
+                placeholder={`예: EB22 다크 브라운`}
                 type="text"
               />
             </div>
@@ -167,10 +168,10 @@ const RecordAIScan: React.FC = () => {
               />
             </div>
             <div className="flex flex-col md:col-span-2">
-              <span className="text-slate-700 dark:text-slate-300 text-sm font-medium mb-1.5 ml-1">시술 메모</span>
+              <span className="text-slate-700 dark:text-slate-300 text-sm font-medium mb-1.5 ml-1">{labels.procedure} 메모</span>
               <textarea 
                 className="block w-full rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary p-4 outline-none transition-all" 
-                placeholder="피부 반응, 머신 속도 등을 기록하세요." 
+                placeholder="관찰 내용이나 주의사항을 기록하세요." 
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -185,9 +186,8 @@ const RecordAIScan: React.FC = () => {
             <h3 className="text-sm font-semibold uppercase tracking-wider opacity-70">사진 기록</h3>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-6">
-            {/* Before Image */}
             <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1">시술 전</p>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase ml-1">{labels.procedure} 전</p>
               <div 
                 onClick={() => beforeImageRef.current?.click()}
                 className="relative group aspect-square rounded-xl overflow-hidden border-2 border-dashed border-slate-300 dark:border-primary/20 bg-slate-100 dark:bg-primary/5 flex flex-col items-center justify-center cursor-pointer"
@@ -209,9 +209,8 @@ const RecordAIScan: React.FC = () => {
               <input ref={beforeImageRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleBeforeImage} />
             </div>
 
-            {/* After Image */}
             <div className="space-y-2">
-              <p className="text-xs font-bold text-primary uppercase ml-1">시술 후</p>
+              <p className="text-xs font-bold text-primary uppercase ml-1">{labels.procedure} 후</p>
               <div 
                 onClick={() => afterImageRef.current?.click()}
                 className="aspect-square rounded-xl overflow-hidden border-2 border-primary bg-primary/10 flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform relative group"
@@ -234,7 +233,6 @@ const RecordAIScan: React.FC = () => {
             </div>
           </div>
 
-          {/* Additional Images */}
           <div className="grid grid-cols-4 gap-2">
             {additionalImages.map((img, i) => (
               <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-slate-200 dark:bg-primary/10 group">
@@ -262,7 +260,7 @@ const RecordAIScan: React.FC = () => {
           <div className="bg-primary p-6 rounded-3xl shadow-xl shadow-primary/20 flex flex-col items-center text-center">
             <ShieldCheck className="size-10 text-white mb-2" />
             <h4 className="text-white font-bold text-lg">기록 저장 및 서명</h4>
-            <p className="text-white/80 text-sm mb-6">시술을 마무리하기 위해 기록을 완료해 주세요.</p>
+            <p className="text-white/80 text-sm mb-6">{labels.procedure}를 마무리하기 위해 기록을 완료해 주세요.</p>
             
             <div className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 flex items-center gap-3 border border-white/20">
               <input 
@@ -273,7 +271,7 @@ const RecordAIScan: React.FC = () => {
                 className="size-6 rounded-lg border-white/30 bg-transparent text-white focus:ring-white transition-all"
               />
               <label htmlFor="guideConfirm" className="text-white font-bold text-sm cursor-pointer">
-                시술 후 주의사항 안내 완료
+                {labels.guide} 완료
               </label>
             </div>
 
@@ -281,7 +279,7 @@ const RecordAIScan: React.FC = () => {
               onClick={handleSave}
               className="w-full bg-white text-primary font-bold py-4 rounded-xl hover:bg-slate-100 transition-colors shadow-lg active:scale-[0.98]"
             >
-              시술 완료하기
+              {labels.procedure} 완료하기
             </button>
           </div>
         </section>

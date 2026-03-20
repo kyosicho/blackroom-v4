@@ -4,21 +4,15 @@ import { ArrowLeft, Search, UserPlus, Check, Calendar as CalendarIcon, Clock, Ch
 import { useCustomers } from '../context/CustomerContext';
 import { useAppointments } from '../context/AppointmentContext';
 
-const PROCEDURE_TYPES = [
-  '눈썹 문신 (Microblading)',
-  '입술 반영구 (Lip Blush)',
-  '점막 아이라인 (Eyeliner)',
-  '파우더 브로우 (Powder Brows)',
-  '헤어라인 교정 (Hairline)',
-  'SMP (Scalp Micropigmentation)',
-  '상담만',
-  '기타',
-];
+import { useSettings } from '../context/SettingsContext';
+import { getProceduresByMode } from '../utils/constants';
 
 const NewAppointment: React.FC = () => {
   const navigate = useNavigate();
   const { customers, searchCustomers, addCustomer } = useCustomers();
   const { addAppointment } = useAppointments();
+  const { shopMode } = useSettings(); // 추가
+  const procedureTypes = getProceduresByMode(shopMode); // 동적 목록 생성
   
   const [step, setStep] = useState<1 | 2 | 3>(1);
   
@@ -161,7 +155,7 @@ const NewAppointment: React.FC = () => {
           <div className="space-y-4">
             <h3 className="font-bold text-slate-500 text-sm uppercase">시술 종류 선택</h3>
             <div className="grid grid-cols-1 gap-2">
-              {PROCEDURE_TYPES.map(type => (
+              {procedureTypes.map(type => (
                 <button
                   key={type}
                   onClick={() => { setSelectedProcedure(type); }}

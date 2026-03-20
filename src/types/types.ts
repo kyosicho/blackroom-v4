@@ -76,6 +76,8 @@ export interface AIScanResult {
   scannedAt: string;
 }
 
+export type ShopMode = 'pmu' | 'tattoo';
+
 // 앱 세팅
 export interface AppSettings {
   artistName: string;
@@ -83,6 +85,7 @@ export interface AppSettings {
   weeklyGoal: number;
   theme: 'light' | 'dark' | 'system';
   language: 'ko' | 'en';
+  shopMode: ShopMode; // 추가
   enableGpsAuth?: boolean;
   shopLatitude?: number;
   shopLongitude?: number;

@@ -2,11 +2,15 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
+import { useSettings } from '../context/SettingsContext';
+import { getLabelsByMode } from '../utils/constants';
 
 const RecordDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { getRecord, deleteRecord } = useRecords();
+  const { shopMode } = useSettings();
+  const labels = getLabelsByMode(shopMode);
 
   const record = id ? getRecord(id) : null;
 
@@ -35,7 +39,7 @@ const RecordDetail: React.FC = () => {
         <button onClick={() => navigate('/records')} className="p-2 hover:bg-slate-100 dark:hover:bg-primary/10 rounded-full transition-colors">
           <ArrowLeft className="size-5" />
         </button>
-        <h1 className="text-lg font-bold tracking-tight">시술 기록 상세</h1>
+        <h1 className="text-lg font-bold tracking-tight">{labels.procedure} 기록 상세</h1>
         <div className="flex gap-2">
           <button onClick={() => navigate(`/record/${record.id}/edit`)} className="p-2 hover:bg-slate-100 dark:hover:bg-primary/10 rounded-full transition-colors">
             <Edit3 className="size-5 text-slate-600 dark:text-slate-300" />
@@ -85,18 +89,18 @@ const RecordDetail: React.FC = () => {
             </div>
             <div className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${record.postGuideConfirmed ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
               <Info className={`size-5 mb-1 ${record.postGuideConfirmed ? 'text-green-600' : 'text-slate-400'}`} />
-              <span className={`text-[10px] font-bold ${record.postGuideConfirmed ? 'text-green-700' : 'text-slate-500'}`}>주의사항 안내</span>
+              <span className={`text-[10px] font-bold ${record.postGuideConfirmed ? 'text-green-700' : 'text-slate-500'}`}>{labels.guide?.replace(' 후 관리', '')} 안내</span>
             </div>
           </div>
         </section>
 
         {/* 사진 기록 */}
         <section className="px-4 py-6">
-          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">시술 사진 기록</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">{labels.procedure} 사진 기록</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
-                <p className="text-xs font-bold text-slate-500 uppercase">시술 전 (Before)</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">{labels.procedure} 전 (Before)</p>
               </div>
               {record.beforeImage ? (
                 <div className="aspect-square rounded-2xl overflow-hidden border border-slate-200 dark:border-primary/20 shadow-sm">
@@ -111,7 +115,7 @@ const RecordDetail: React.FC = () => {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
-                <p className="text-xs font-bold text-primary uppercase">시술 후 (After)</p>
+                <p className="text-xs font-bold text-primary uppercase">{labels.procedure} 후 (After)</p>
               </div>
               {record.afterImage ? (
                 <div className="aspect-square rounded-2xl overflow-hidden border-2 border-primary shadow-md">
@@ -127,11 +131,11 @@ const RecordDetail: React.FC = () => {
           </div>
         </section>
 
-        {/* 시술 상세 정보 */}
+        {/* 상세 정보 */}
         <section className="px-4 py-2 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">사용 색소</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">사용 {labels.pigment}</p>
               <p className="font-bold text-sm">{record.pigment || '미입력'}</p>
             </div>
             <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
@@ -140,7 +144,7 @@ const RecordDetail: React.FC = () => {
             </div>
           </div>
           <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
-            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">시술 메모</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">{labels.procedure} 메모</p>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{record.notes || '작성된 메모가 없습니다.'}</p>
           </div>
         </section>
@@ -175,7 +179,7 @@ const RecordDetail: React.FC = () => {
 
         <section className="px-4 py-8 text-center">
           <p className="text-[10px] text-slate-400 font-medium">
-            시술 기록 ID: {record.id.slice(0, 8).toUpperCase()} • 시술 일시: {new Date(record.createdAt).toLocaleString('ko-KR')}
+            {labels.procedure} 기록 ID: {record.id.slice(0, 8).toUpperCase()} • {labels.procedure} 일시: {new Date(record.createdAt).toLocaleString('ko-KR')}
           </p>
         </section>
       </main>
