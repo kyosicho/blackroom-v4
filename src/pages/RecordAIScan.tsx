@@ -5,6 +5,8 @@ import { useRecords } from '../context/RecordContext';
 import { useSettings } from '../context/SettingsContext';
 import { getLabelsByMode } from '../utils/constants';
 
+import { compressImage } from '../utils/imageUtils';
+
 const RecordAIScan: React.FC = () => {
   const navigate = useNavigate();
   const { currentDraft, updateDraft, saveDraft } = useRecords();
@@ -38,14 +40,20 @@ const RecordAIScan: React.FC = () => {
     }
   }, [currentDraft]);
 
-  const handleImageUpload = (file: File, callback: (dataUrl: string) => void) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        callback(e.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+  const handleImageUpload = async (file: File, callback: (dataUrl: string) => void) => {
+    try {
+      // 업로드 시 1024px 품질 0.7로 압축하여 localStorage 용량 절약
+      const compressedDataUrl = await compressImage(file, 1024, 1024, 0.7);
+      callback(compressedDataUrl);
+    } catch (err) {
+      console.error('Image compression failed:', err);
+      // Fallback: compressImage 실패 시 원본 시도 (혹은 실패 알림)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) callback(e.target.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleBeforeImage = (e: React.ChangeEvent<HTMLInputElement>) => {
