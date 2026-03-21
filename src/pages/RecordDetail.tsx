@@ -166,7 +166,16 @@ const RecordDetail: React.FC = () => {
         <section className="px-4 py-6">
           <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">보안 및 법적 서류</h3>
           <div 
-            onClick={() => consent && setShowConsent(true)}
+            onClick={() => {
+              if (record.consentId) {
+                if (consent) {
+                  setShowConsent(true);
+                } else {
+                  alert('동의서 데이터를 불러오는 중이거나 찾을 수 없습니다.');
+                  refreshConsents(); // Re-attempt to load
+                }
+              }
+            }}
             className={`group relative overflow-hidden bg-white dark:bg-primary/5 border transition-all rounded-3xl p-6 cursor-pointer shadow-sm ${
               record.consentId 
                 ? 'border-green-200 dark:border-green-900/40' 

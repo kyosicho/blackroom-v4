@@ -87,8 +87,8 @@ export const ConsentProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, [shopId, refreshConsents]);
 
   const getConsent = useCallback((id: string): Consent | null => {
-    return getById<Consent>(STORAGE_KEYS.CONSENTS, id);
-  }, []);
+    return consents.find(c => c.id === id) || getById<Consent>(STORAGE_KEYS.CONSENTS, id);
+  }, [consents]);
 
   const addConsent = useCallback(async (data: Omit<Consent, 'id' | 'createdAt'>): Promise<Consent> => {
     const newConsent: Consent = {
