@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   RECORDS: 'blackroom_records',
   SETTINGS: 'blackroom_settings',
   INITIALIZED: 'blackroom_initialized',
+  DRAFT: 'blackroom_draft',
 } as const;
 
 // UUID 생성

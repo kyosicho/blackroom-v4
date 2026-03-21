@@ -42,6 +42,28 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setLoading(false);
   }, []);
 
+  // 0. 드래프트 복구 및 자동 저장
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(STORAGE_KEYS.DRAFT);
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed && Object.keys(parsed).length > 0) {
+          console.log('Restoring draft from localStorage:', parsed);
+          setCurrentDraft(parsed);
+        }
+      } catch (e) {
+        console.error('Failed to parse saved draft:', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentDraft && Object.keys(currentDraft).length > 0) {
+      localStorage.setItem(STORAGE_KEYS.DRAFT, JSON.stringify(currentDraft));
+    }
+  }, [currentDraft]);
+
   // 1. 초기 Supabase 데이터 로드 & 병합
   useEffect(() => {
     if (!shopId) {
@@ -187,6 +209,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const clearDraft = useCallback(() => {
     setCurrentDraft(null);
+    localStorage.removeItem(STORAGE_KEYS.DRAFT);
   }, []);
 
   const saveDraft = useCallback((overrides?: Partial<ProcedureRecord>): ProcedureRecord | null => {
@@ -213,6 +236,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       postGuideConfirmed: finalData.postGuideConfirmed,
     });
     setCurrentDraft(null);
+    localStorage.removeItem(STORAGE_KEYS.DRAFT);
     return record;
   }, [currentDraft, addRecord]);
 
