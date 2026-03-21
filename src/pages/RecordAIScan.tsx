@@ -67,7 +67,7 @@ const RecordAIScan: React.FC = () => {
     setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
       const finalData = {
         pigment: pigment || '',
@@ -78,26 +78,23 @@ const RecordAIScan: React.FC = () => {
         additionalImages: additionalImages || [],
         postGuideConfirmed,
         status: 'completed' as const,
-        // consentId는 설정하지 않음으로써 Context에 저장된 기존 값을 유지함
       };
 
-      // draft 업데이트 및 저장 통합 호출
       updateDraft(finalData);
-      const saved = saveDraft(finalData);
+      const savedRecord = await saveDraft(finalData);
       
-      if (saved) {
+      if (savedRecord) {
         navigate('/records');
       } else {
-        navigate('/records');
+        alert('기록을 저장할 수 없습니다. 필수 입력 사항을 확인해 주세요.');
       }
     } catch (err) {
       console.error('Error in handleSave:', err);
-      // Fallback navigation to avoid getting stuck
-      navigate('/records');
+      alert('저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
     }
   };
 
-  const handleQuickSave = () => {
+  const handleQuickSave = async () => {
     const finalData = {
       pigment,
       needle,
@@ -109,7 +106,7 @@ const RecordAIScan: React.FC = () => {
       consentId: currentDraft?.consentId,
     };
     updateDraft(finalData);
-    const saved = saveDraft(finalData);
+    const saved = await saveDraft(finalData);
     if (saved) {
       navigate('/records');
     }

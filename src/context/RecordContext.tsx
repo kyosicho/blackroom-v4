@@ -9,7 +9,7 @@ interface RecordContextType {
   loading: boolean;
   currentDraft: Partial<ProcedureRecord> | null;
   getRecord: (id: string) => ProcedureRecord | null;
-  addRecord: (data: Omit<ProcedureRecord, 'id' | 'createdAt' | 'updatedAt'>) => ProcedureRecord | null;
+  addRecord: (data: Omit<ProcedureRecord, 'id' | 'createdAt' | 'updatedAt'>) => Promise<ProcedureRecord | null>;
   updateRecord: (id: string, data: Partial<ProcedureRecord>) => ProcedureRecord | null;
   deleteRecord: (id: string) => boolean;
   getRecordsByCustomer: (customerId: string) => ProcedureRecord[];
@@ -19,7 +19,7 @@ interface RecordContextType {
   setDraft: (data: Partial<ProcedureRecord>) => void;
   updateDraft: (data: Partial<ProcedureRecord>) => void;
   clearDraft: () => void;
-  saveDraft: (overrides?: Partial<ProcedureRecord>) => ProcedureRecord | null;
+  saveDraft: (overrides?: Partial<ProcedureRecord>) => Promise<ProcedureRecord | null>;
   // AI scan result
   setAIScanResult: (result: AIScanResult) => void;
   refreshRecords: () => void;
@@ -133,7 +133,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return getById<ProcedureRecord>(STORAGE_KEYS.RECORDS, id);
   }, []);
 
-  const addRecord = useCallback((recordData: Omit<ProcedureRecord, 'id' | 'createdAt' | 'updatedAt'>): ProcedureRecord | null => {
+  const addRecord = useCallback(async (recordData: Omit<ProcedureRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProcedureRecord | null> => {
     if (!shopId) return null;
     const newRecord: ProcedureRecord = {
       ...recordData,
@@ -143,13 +143,26 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       updatedAt: now(),
     };
     
-    create(STORAGE_KEYS.RECORDS, newRecord);
-    
-    // Background sync
-    supabaseService.upsertRecord(newRecord, shopId);
-    
-    refreshRecords();
-    return newRecord;
+    try {
+      // 1. 메모리 상태 즉시 업데이트 (UI 반영용)
+      setRecords(prev => [newRecord, ...prev]);
+      
+      // 2. 로컬 스토리지 저장
+      create(STORAGE_KEYS.RECORDS, newRecord);
+      
+      // 3. Supabase 백그라운드 동기화
+      supabaseService.upsertRecord(newRecord, shopId).catch(err => {
+        console.error('Supabase Sync Failed in addRecord:', err);
+      });
+      
+      // 4. 완료 후 드래프트 초기화
+      refreshRecords(); // 최종 무결성 확인
+      return newRecord;
+    } catch (err) {
+      console.error('CRITICAL: Failed to add record:', err);
+      alert('기록 저장 중 오류가 발생했습니다. 브라우저의 저장 공간이나 보안 설정을 확인해 주세요.');
+      return null;
+    }
   }, [shopId, refreshRecords]);
 
   const updateRecord = useCallback((id: string, data: Partial<ProcedureRecord>): ProcedureRecord | null => {
@@ -216,11 +229,9 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.removeItem(STORAGE_KEYS.DRAFT);
   }, []);
 
-  const saveDraft = useCallback((overrides?: Partial<ProcedureRecord>): ProcedureRecord | null => {
+  const saveDraft = useCallback(async (overrides?: Partial<ProcedureRecord>): Promise<ProcedureRecord | null> => {
     if (!currentDraft && !overrides) return null;
     
-    // 현재 드래프트와 전달받은 overrides를 합쳐서 최종 데이터 생성
-    // overrides에 값이 없는 경우 기존 드래프트의 중요 데이터(id, aiScanResult 등)를 보존합니다.
     const finalData: Partial<ProcedureRecord> = { ...currentDraft };
     
     if (overrides) {
@@ -232,7 +243,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       });
     }
 
-    const record = addRecord({
+    const record = await addRecord({
       customerId: finalData.customerId || '',
       customerName: finalData.customerName || '',
       procedureType: finalData.procedureType || '',
@@ -248,6 +259,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       appointmentId: finalData.appointmentId,
       aiScanResult: finalData.aiScanResult
     });
+
     setCurrentDraft(null);
     localStorage.removeItem(STORAGE_KEYS.DRAFT);
     return record;

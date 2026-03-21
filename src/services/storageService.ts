@@ -67,10 +67,11 @@ export function setAll<T>(key: string, items: T[]): void {
 export function create<T extends { id: string }>(key: string, item: T): T {
   try {
     const items = getAll<T>(key);
-    items.push(item);
+    items.unshift(item); // 최신 데이터가 앞으로 오게
     localStorage.setItem(key, JSON.stringify(items));
   } catch (e) {
     console.error(`Failed to create item in ${key}:`, e);
+    throw e; // Error를 전파하여 상위에서 처리하게 함
   }
   return item;
 }
