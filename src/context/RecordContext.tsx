@@ -220,8 +220,18 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     if (!currentDraft && !overrides) return null;
     
     // 현재 드래프트와 전달받은 overrides를 합쳐서 최종 데이터 생성
-    const finalData = { ...currentDraft, ...overrides };
+    // overrides에 값이 없는 경우 기존 드래프트의 중요 데이터(id, aiScanResult 등)를 보존합니다.
+    const finalData: Partial<ProcedureRecord> = { ...currentDraft };
     
+    if (overrides) {
+      Object.keys(overrides).forEach(key => {
+        const k = key as keyof ProcedureRecord;
+        if (overrides[k] !== undefined && (overrides[k] as any) !== '') {
+          (finalData as any)[k] = overrides[k];
+        }
+      });
+    }
+
     const record = addRecord({
       customerId: finalData.customerId || '',
       customerName: finalData.customerName || '',
@@ -236,8 +246,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       status: 'completed',
       consentId: finalData.consentId,
       appointmentId: finalData.appointmentId,
-      aiScanResult: finalData.aiScanResult,
-      gpsVerified: finalData.gpsVerified,
+      aiScanResult: finalData.aiScanResult
     });
     setCurrentDraft(null);
     localStorage.removeItem(STORAGE_KEYS.DRAFT);

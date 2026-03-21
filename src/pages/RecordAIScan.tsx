@@ -31,7 +31,9 @@ const RecordAIScan: React.FC = () => {
       if (!notes && currentDraft.notes) setNotes(currentDraft.notes);
       if (!beforeImage && currentDraft.beforeImage) setBeforeImage(currentDraft.beforeImage);
       if (!afterImage && currentDraft.afterImage) setAfterImage(currentDraft.afterImage);
-      if (additionalImages.length === 0 && currentDraft.additionalImages) setAdditionalImages(currentDraft.additionalImages);
+      if (additionalImages.length === 0 && currentDraft.additionalImages && currentDraft.additionalImages.length > 0) {
+        setAdditionalImages(currentDraft.additionalImages);
+      }
       if (!postGuideConfirmed && currentDraft.postGuideConfirmed) setPostGuideConfirmed(currentDraft.postGuideConfirmed);
     }
   }, [currentDraft]);
@@ -76,7 +78,7 @@ const RecordAIScan: React.FC = () => {
         additionalImages: additionalImages || [],
         postGuideConfirmed,
         status: 'completed' as const,
-        consentId: currentDraft?.consentId,
+        // consentId는 설정하지 않음으로써 Context에 저장된 기존 값을 유지함
       };
 
       // draft 업데이트 및 저장 통합 호출
