@@ -9,7 +9,7 @@ interface RecordContextType {
   loading: boolean;
   currentDraft: Partial<ProcedureRecord> | null;
   getRecord: (id: string) => ProcedureRecord | null;
-  addRecord: (data: Omit<ProcedureRecord, 'id' | 'createdAt' | 'updatedAt'>) => ProcedureRecord;
+  addRecord: (data: Omit<ProcedureRecord, 'id' | 'createdAt' | 'updatedAt'>) => ProcedureRecord | null;
   updateRecord: (id: string, data: Partial<ProcedureRecord>) => ProcedureRecord | null;
   deleteRecord: (id: string) => boolean;
   getRecordsByCustomer: (customerId: string) => ProcedureRecord[];
@@ -133,23 +133,24 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return getById<ProcedureRecord>(STORAGE_KEYS.RECORDS, id);
   }, []);
 
-  const addRecord = useCallback((data: Omit<ProcedureRecord, 'id' | 'createdAt' | 'updatedAt'>): ProcedureRecord => {
+  const addRecord = useCallback((recordData: Omit<ProcedureRecord, 'id' | 'createdAt' | 'updatedAt'>): ProcedureRecord | null => {
+    if (!shopId) return null;
     const newRecord: ProcedureRecord = {
-      ...data,
+      ...recordData,
       id: generateId(),
       shopId: shopId,
       createdAt: now(),
       updatedAt: now(),
     };
+    
     create(STORAGE_KEYS.RECORDS, newRecord);
     
-    if (shopId) {
-      supabaseService.upsertRecord(newRecord, shopId);
-    }
+    // Background sync
+    supabaseService.upsertRecord(newRecord, shopId);
     
     refreshRecords();
     return newRecord;
-  }, [refreshRecords, shopId]);
+  }, [shopId, refreshRecords]);
 
   const updateRecord = useCallback((id: string, data: Partial<ProcedureRecord>): ProcedureRecord | null => {
     const result = update<ProcedureRecord>(STORAGE_KEYS.RECORDS, id, { ...data, updatedAt: now() });
@@ -199,12 +200,15 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [records]);
 
   // Draft management
-  const setDraft = useCallback((data: Partial<ProcedureRecord>) => {
+  const setDraft = useCallback((data: Partial<ProcedureRecord> | null) => {
     setCurrentDraft(data);
+    if (data === null) {
+      localStorage.removeItem(STORAGE_KEYS.DRAFT);
+    }
   }, []);
 
-  const updateDraft = useCallback((data: Partial<ProcedureRecord>) => {
-    setCurrentDraft((prev) => (prev ? { ...prev, ...data } : data));
+  const updateDraft = useCallback((updates: Partial<ProcedureRecord>) => {
+    setCurrentDraft((prev) => (prev ? { ...prev, ...updates } : updates));
   }, []);
 
   const clearDraft = useCallback(() => {
@@ -225,15 +229,15 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       pigment: finalData.pigment || '',
       needle: finalData.needle || '',
       notes: finalData.notes || '',
-      additionalImages: finalData.additionalImages || [],
-      status: finalData.status || 'in-progress',
       beforeImage: finalData.beforeImage,
       afterImage: finalData.afterImage,
-      aiScanResult: finalData.aiScanResult,
-      appointmentId: finalData.appointmentId,
+      additionalImages: finalData.additionalImages || [],
+      postGuideConfirmed: finalData.postGuideConfirmed || false,
+      status: 'completed',
       consentId: finalData.consentId,
+      appointmentId: finalData.appointmentId,
+      aiScanResult: finalData.aiScanResult,
       gpsVerified: finalData.gpsVerified,
-      postGuideConfirmed: finalData.postGuideConfirmed,
     });
     setCurrentDraft(null);
     localStorage.removeItem(STORAGE_KEYS.DRAFT);
@@ -241,12 +245,15 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [currentDraft, addRecord]);
 
   const setAIScanResult = useCallback((result: AIScanResult) => {
-    setCurrentDraft((prev) => ({
-      ...prev,
-      aiScanResult: result,
-      pigment: result.recommendedPigment,
-      needle: result.recommendedNeedle,
-    }));
+    setCurrentDraft((prev) => {
+      if (!prev) return prev;
+      return { 
+        ...prev, 
+        aiScanResult: result,
+        pigment: `${result.pigmentBrand} ${result.pigmentColor}`.trim(),
+        needle: `${result.needleType} ${result.needleSize}`.trim()
+      };
+    });
   }, []);
 
   return (

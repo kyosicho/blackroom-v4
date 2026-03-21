@@ -38,7 +38,7 @@ const ScanLoading: React.FC = () => {
         >
           <X className="size-6" />
         </button>
-        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center">AI Analysis</h2>
+        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center">AI Material Scan</h2>
         <div className="size-12"></div>
       </div>
 

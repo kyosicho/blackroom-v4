@@ -71,11 +71,11 @@ export type RecordStatus = 'in-progress' | 'completed' | 'touch-up' | 'consultin
 
 // AI 스캔 결과
 export interface AIScanResult {
-  skinType: string;
-  hydration: number;
-  sensitivity: string;
-  recommendedPigment: string;
-  recommendedNeedle: string;
+  pigmentBrand: string;
+  pigmentColor: string;
+  lotNumber?: string;
+  needleType: string;
+  needleSize: string;
   notes: string;
   scannedAt: string;
 }

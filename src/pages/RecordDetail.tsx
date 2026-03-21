@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info } from 'lucide-react';
+import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info, Sparkles } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
 import { useSettings } from '../context/SettingsContext';
 import { useCustomers } from '../context/CustomerContext';
@@ -207,22 +207,26 @@ const RecordDetail: React.FC = () => {
             <div className="bg-slate-900 dark:bg-white/5 p-5 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none">
               <div className="flex items-center gap-2 mb-5">
                 <div className="p-2 bg-primary/20 rounded-xl text-primary">
-                  <Camera className="size-4" />
+                  <Sparkles className="size-4" />
                 </div>
-                <h3 className="text-white text-sm font-bold">AI Skin Analysis Report</h3>
+                <h3 className="text-white text-sm font-bold">AI Material Analysis Report</h3>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/10 p-3 rounded-2xl text-center">
-                  <p className="text-[9px] text-white/40 uppercase mb-1">Skin Type</p>
-                  <p className="text-white text-xs font-bold">{record.aiScanResult.skinType}</p>
+                  <p className="text-[9px] text-white/40 uppercase mb-1">Pigment Brand</p>
+                  <p className="text-white text-xs font-bold">{record.aiScanResult.pigmentBrand}</p>
                 </div>
                 <div className="bg-white/10 p-3 rounded-2xl text-center">
-                  <p className="text-[9px] text-white/40 uppercase mb-1">Hydration</p>
-                  <p className="text-white text-xs font-bold">{record.aiScanResult.hydration}%</p>
+                  <p className="text-[9px] text-white/40 uppercase mb-1">Pigment Color</p>
+                  <p className="text-white text-xs font-bold">{record.aiScanResult.pigmentColor}</p>
                 </div>
                 <div className="bg-white/10 p-3 rounded-2xl text-center">
-                  <p className="text-[9px] text-white/40 uppercase mb-1">Sensitivity</p>
-                  <p className="text-white text-xs font-bold">{record.aiScanResult.sensitivity}</p>
+                  <p className="text-[9px] text-white/40 uppercase mb-1">Needle Type</p>
+                  <p className="text-white text-xs font-bold">{record.aiScanResult.needleType}</p>
+                </div>
+                <div className="bg-white/10 p-3 rounded-2xl text-center">
+                  <p className="text-[9px] text-white/40 uppercase mb-1">Needle Size</p>
+                  <p className="text-white text-xs font-bold">{record.aiScanResult.needleSize}</p>
                 </div>
               </div>
             </div>

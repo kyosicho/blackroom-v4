@@ -23,6 +23,19 @@ const RecordAIScan: React.FC = () => {
   const [additionalImages, setAdditionalImages] = useState<string[]>(currentDraft?.additionalImages || []);
   const [postGuideConfirmed, setPostGuideConfirmed] = useState(currentDraft?.postGuideConfirmed || false);
 
+  // Hydration sync: currentDraft가 로컬 스토리지에서 나중에 로드될 경우 대비
+  React.useEffect(() => {
+    if (currentDraft) {
+      if (!pigment && currentDraft.pigment) setPigment(currentDraft.pigment);
+      if (!needle && currentDraft.needle) setNeedle(currentDraft.needle);
+      if (!notes && currentDraft.notes) setNotes(currentDraft.notes);
+      if (!beforeImage && currentDraft.beforeImage) setBeforeImage(currentDraft.beforeImage);
+      if (!afterImage && currentDraft.afterImage) setAfterImage(currentDraft.afterImage);
+      if (additionalImages.length === 0 && currentDraft.additionalImages) setAdditionalImages(currentDraft.additionalImages);
+      if (!postGuideConfirmed && currentDraft.postGuideConfirmed) setPostGuideConfirmed(currentDraft.postGuideConfirmed);
+    }
+  }, [currentDraft]);
+
   const handleImageUpload = (file: File, callback: (dataUrl: string) => void) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -66,17 +79,13 @@ const RecordAIScan: React.FC = () => {
         consentId: currentDraft?.consentId,
       };
 
-      console.log('Attempting to save record...', finalData);
-      
       // draft 업데이트 및 저장 통합 호출
       updateDraft(finalData);
       const saved = saveDraft(finalData);
       
       if (saved) {
-        console.log('Record saved successfully:', saved.id);
         navigate('/records');
       } else {
-        console.warn('saveDraft returned null, navigating anyway');
         navigate('/records');
       }
     } catch (err) {
@@ -113,7 +122,7 @@ const RecordAIScan: React.FC = () => {
         >
           <ArrowLeft className="size-6" />
         </button>
-        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1">새 {labels.procedure} 기록</h2>
+        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">새 {labels.procedure} 기록</h2>
         <div className="flex w-12 items-center justify-end">
           <button 
             onClick={handleQuickSave} 
@@ -151,7 +160,7 @@ const RecordAIScan: React.FC = () => {
                   className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
                 >
                   <Sparkles className="size-3" />
-                  <span className="text-[10px] font-bold uppercase">AI 스캔</span>
+                  <span className="text-[10px] font-bold uppercase">재료 판독</span>
                 </button>
               </div>
               <input 
@@ -170,7 +179,7 @@ const RecordAIScan: React.FC = () => {
                   className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
                 >
                   <Sparkles className="size-3" />
-                  <span className="text-[10px] font-bold uppercase">AI 스캔</span>
+                  <span className="text-[10px] font-bold uppercase">재료 판독</span>
                 </button>
               </div>
               <input 
