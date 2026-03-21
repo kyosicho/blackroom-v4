@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit2, RotateCcw } from 'lucide-react';
 import Header from '../components/Header';
 import { useRecords } from '../context/RecordContext';
 import { useConsents } from '../context/ConsentContext';
@@ -8,12 +7,11 @@ import { useSettings } from '../context/SettingsContext';
 import { useCustomers } from '../context/CustomerContext';
 import { now } from '../services/storageService';
 import LegalConsentForm from '../components/LegalConsentForm';
+import SignaturePad from '../components/SignaturePad';
 
 const Consent: React.FC = () => {
   const navigate = useNavigate();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [hasSigned, setHasSigned] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
   const { currentDraft, updateDraft } = useRecords();
   const { settings } = useSettings();
   const { getCustomer } = useCustomers();
@@ -24,6 +22,7 @@ const Consent: React.FC = () => {
 
   const customer = currentDraft?.customerId ? getCustomer(currentDraft.customerId) : null;
   const isAllAgreed = terms.every(t => t);
+  const hasSigned = !!signatureData;
 
   const handleCheckboxChange = (index: number, checked: boolean) => {
     const newTerms = [...terms];
@@ -31,103 +30,16 @@ const Consent: React.FC = () => {
     setTerms(newTerms);
   };
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const resizeCanvas = () => {
-      const parent = canvas.parentElement;
-      if (parent) {
-        canvas.width = parent.clientWidth;
-        canvas.height = parent.clientHeight;
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 3.5;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-      }
-    };
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    return () => window.removeEventListener('resize', resizeCanvas);
-  }, []);
-
-  const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
-    const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
-
-    if ('touches' in e) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-    };
-  };
-
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    const { x, y } = getCoordinates(e);
-    const ctx = canvasRef.current?.getContext('2d');
-    if (ctx) {
-      ctx.strokeStyle = '#ee2b5b'; // 서명 시에는 빨간색으로 시인성 확보
-      ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      setIsDrawing(true);
-      setHasSigned(true);
-    }
-  };
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing) return;
-    const { x, y } = getCoordinates(e);
-    const ctx = canvasRef.current?.getContext('2d');
-    if (ctx) {
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
-
-  const clearCanvas = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      ctx?.clearRect(0, 0, canvas.width, canvas.height);
-      setHasSigned(false);
-    }
-  };
-
   const handleSubmit = async () => {
-    if (isSaving || !hasSigned || !isAllAgreed) return;
+    if (isSaving || !hasSigned || !isAllAgreed || !signatureData) return;
     
     setIsSaving(true);
     try {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const signatureData = canvas.toDataURL('image/png');
-
       const consentRecord = await addConsent({
         customerId: currentDraft?.customerId || '',
         appointmentId: currentDraft?.appointmentId,
         terms: terms,
-        signatureData,
+        signatureData: signatureData,
         signedAt: now(),
       });
 
@@ -143,43 +55,12 @@ const Consent: React.FC = () => {
     }
   };
 
-  // 서명 패드 노드 정의
-  const signatureNode = (
-    <div className="relative h-40 sm:h-48 w-full rounded-2xl border-2 border-dashed border-primary/30 bg-white shadow-inner overflow-hidden cursor-crosshair">
-      {!hasSigned && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 pointer-events-none">
-          <Edit2 className="size-10 text-primary mb-2" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Sign Here</span>
-        </div>
-      )}
-      <canvas 
-        ref={canvasRef}
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseOut={stopDrawing}
-        onTouchStart={startDrawing}
-        onTouchMove={draw}
-        onTouchEnd={stopDrawing}
-        className="absolute inset-0 w-full h-full touch-none"
-      />
-      {hasSigned && (
-        <button 
-          onClick={clearCanvas}
-          className="absolute bottom-2 right-2 p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-400 hover:text-primary transition-colors shadow-sm active:scale-95"
-          title="서명 지우기"
-        >
-          <RotateCcw className="size-4" />
-        </button>
-      )}
-    </div>
-  );
-
   return (
-    <div className="flex flex-col min-h-screen bg-slate-100 dark:bg-slate-950">
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950">
       <Header title="시술 동의서 작성" />
       
-      <main className="flex-1 overflow-y-auto pb-48 pt-4">
+      {/* 바닥 여백을 pb-48에서 pb-32로 줄여 불필요한 공백 제거 */}
+      <main className="flex-1 overflow-y-auto pb-32 pt-4">
         <div className="max-w-screen-md mx-auto px-4">
           {/* Progress Indicator */}
           <div className="mb-6 px-2">
@@ -208,7 +89,13 @@ const Consent: React.FC = () => {
               artistName={settings.artistName || '원장님'}
               isInteractive={true}
               onCheckboxChange={handleCheckboxChange}
-              signatureNode={signatureNode}
+              signatureNode={
+                <SignaturePad 
+                  onSign={setSignatureData} 
+                  onClear={() => setSignatureData(null)} 
+                  height="h-56" 
+                />
+              }
             />
           </div>
           
@@ -222,24 +109,30 @@ const Consent: React.FC = () => {
       </main>
 
       {/* Action Footer */}
-      <footer className="fixed bottom-0 w-full max-w-screen-md mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-white/5 p-6 pb-12 z-20">
-        <div className="flex gap-4">
+      {/* z-index와 배경 블러를 강화하고 버튼 흔들림 방지를 위해 min-h 설정 */}
+      <footer className="fixed bottom-0 left-0 right-0 w-full max-w-screen-md mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/5 p-6 pb-10 z-40">
+        <div className="flex gap-4 items-stretch">
           <button 
             onClick={() => navigate(-1)}
-            className="flex-1 py-4 px-6 rounded-2xl font-bold border-2 border-slate-100 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-colors"
+            className="flex-1 py-4 px-6 rounded-2xl font-bold border-2 border-slate-100 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-all active:scale-95"
           >
             이전 단계
           </button>
           <button 
             disabled={!isAllAgreed || !hasSigned || isSaving}
             onClick={handleSubmit}
-            className={`flex-[2] py-4 px-6 rounded-2xl font-black text-white shadow-xl transition-all ${
+            className={`flex-[2] py-4 px-6 rounded-2xl font-black text-white shadow-xl transition-all relative flex items-center justify-center min-h-[56px] ${
               isAllAgreed && hasSigned && !isSaving
                 ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20 active:scale-95' 
                 : 'bg-slate-200 dark:bg-white/5 text-slate-400 cursor-not-allowed'
             }`}
           >
-            {isSaving ? '저장 중...' : '동의 및 서명 완료'}
+            {isSaving ? (
+              <div className="flex items-center gap-2">
+                <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>저장 중...</span>
+              </div>
+            ) : '동의 및 서명 완료'}
           </button>
         </div>
       </footer>

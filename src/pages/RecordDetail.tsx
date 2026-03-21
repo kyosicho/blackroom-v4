@@ -16,7 +16,7 @@ const RecordDetail: React.FC = () => {
    const { getRecord, deleteRecord } = useRecords();
   const { settings, shopMode } = useSettings();
   const { getCustomer } = useCustomers();
-  const { getConsent } = useConsents();
+  const { getConsent, refreshConsents } = useConsents();
   const labels = getLabelsByMode(shopMode);
   const [showConsent, setShowConsent] = React.useState(false);
 
