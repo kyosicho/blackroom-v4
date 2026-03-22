@@ -40,6 +40,8 @@ const RecordAIScan: React.FC = () => {
     }
   }, [currentDraft]);
 
+  const scanInputRef = useRef<HTMLInputElement>(null);
+
   const handleImageUpload = async (file: File, callback: (dataUrl: string) => void) => {
     try {
       // 업로드 시 1024px 품질 0.7로 압축하여 localStorage 용량 절약
@@ -47,12 +49,21 @@ const RecordAIScan: React.FC = () => {
       callback(compressedDataUrl);
     } catch (err) {
       console.error('Image compression failed:', err);
-      // Fallback: compressImage 실패 시 원본 시도 (혹은 실패 알림)
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) callback(e.target.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAIScanSource = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file, (dataUrl) => {
+        // 이미지를 가지고 로딩 페이지로 이동
+        navigate('/scan-loading', { state: { image: dataUrl } });
+      });
     }
   };
 
@@ -155,6 +166,16 @@ const RecordAIScan: React.FC = () => {
           </div>
         </section>
 
+        {/* hidden input for AI scan */}
+        <input 
+          ref={scanInputRef} 
+          type="file" 
+          accept="image/*" 
+          capture="environment" 
+          className="hidden" 
+          onChange={handleAIScanSource} 
+        />
+
         {/* Procedure Details */}
         <section className="px-4 py-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">{labels.procedure} 상세 정보</h3>
@@ -163,7 +184,7 @@ const RecordAIScan: React.FC = () => {
               <div className="flex items-center justify-between mb-1.5 ml-1">
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">사용 {labels.pigment}</span>
                 <button 
-                  onClick={() => navigate('/scan-loading')}
+                  onClick={() => scanInputRef.current?.click()}
                   className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
                 >
                   <Sparkles className="size-3" />
@@ -182,7 +203,7 @@ const RecordAIScan: React.FC = () => {
               <div className="flex items-center justify-between mb-1.5 ml-1">
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">니들 구성</span>
                 <button 
-                  onClick={() => navigate('/scan-loading')}
+                  onClick={() => scanInputRef.current?.click()}
                   className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
                 >
                   <Sparkles className="size-3" />

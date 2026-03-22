@@ -1,32 +1,74 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { X, Fingerprint, Image, Ban } from 'lucide-react';
 import scanImg from '../assets/images/ai_scan_loading.png';
+import { scanMaterialImage } from '../services/aiService';
 
 const ScanLoading: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const scannedImage = location.state?.image;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 25); // 약 2.5초 동안 진행
+    if (!scannedImage) {
+      alert('판독할 이미지가 없습니다.');
+      navigate(-1);
+      return;
+    }
 
-    const timeout = setTimeout(() => {
-      navigate('/scan-result');
-    }, 3000);
+    let progressInterval: any;
+
+    const performScan = async () => {
+      try {
+        // 가짜 프로그레스 바 시작
+        progressInterval = setInterval(() => {
+          setProgress((prev) => (prev < 90 ? prev + 1 : prev));
+        }, 30);
+
+        // 실제 AI 스캔 요청
+        const result = await scanMaterialImage(scannedImage);
+        
+        // 성공 시 100% 채우고 결과 페이지로 이동
+        clearInterval(progressInterval);
+        setProgress(100);
+        
+        setTimeout(() => {
+          navigate('/scan-result', { state: { result } });
+        }, 500);
+      } catch (err: any) {
+        clearInterval(progressInterval);
+        setError(err.message || '분석 중 오류가 발생했습니다.');
+        console.error(err);
+      }
+    };
+
+    performScan();
 
     return () => {
-      clearInterval(timer);
-      clearTimeout(timeout);
+      if (progressInterval) clearInterval(progressInterval);
     };
-  }, [navigate]);
+  }, [navigate, scannedImage]);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-background-light dark:bg-background-dark p-6 text-center">
+        <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6">
+          <Ban className="size-10" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">판독 실패</h2>
+        <p className="text-slate-500 mb-8">{error}</p>
+        <button 
+          onClick={() => navigate(-1)}
+          className="w-full max-w-xs h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20"
+        >
+          다시 시도하기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-hidden font-display antialiased">

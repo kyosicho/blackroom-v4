@@ -1,30 +1,35 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Info, CheckCircle2, RotateCcw, Save, Activity, Shield } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Info, CheckCircle2, RotateCcw, Save, Activity, Shield, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
 import { useRecords } from '../context/RecordContext';
-import { now } from '../services/storageService';
 import type { AIScanResult } from '../types/types';
 
 const ScanResult: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setAIScanResult } = useRecords();
 
-  // 시뮬레이션된 AI 재료 판독 결과 (실제 AI 연동 시 이 객체가 API로부터 채워짐)
-  const scanResult: AIScanResult = {
-    pigmentBrand: 'Perma Blend',
-    pigmentColor: 'Espresso',
-    lotNumber: 'PB-2024-03-X',
-    needleType: 'Precision 1RL',
-    needleSize: '0.25mm',
-    notes: '정품 색소 및 멸균 니들 확인 완료. 유효기간 2026-12-31까지.',
-    scannedAt: now(),
-  };
+  // state에서 분석 결과 가져오기 (없으면 에러 처리)
+  const scanResult: AIScanResult | null = location.state?.result;
 
   const handleApply = () => {
-    setAIScanResult(scanResult);
-    navigate('/record-ai_scan');
+    if (scanResult) {
+      setAIScanResult(scanResult);
+      navigate('/record-ai_scan');
+    }
   };
+
+  if (!scanResult) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background-light dark:bg-background-dark text-center">
+        <AlertCircle className="size-16 text-primary mb-4" />
+        <h2 className="text-xl font-bold mb-2">분석 결과를 찾을 수 없습니다</h2>
+        <p className="text-slate-500 mb-8">다시 시도해 주세요.</p>
+        <button onClick={() => navigate(-1)} className="px-8 py-3 bg-primary text-white font-bold rounded-xl">돌아가기</button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden font-display">
