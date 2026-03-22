@@ -47,7 +47,8 @@ const Consent: React.FC = () => {
 
       setTimeout(() => {
         setIsSaving(false);
-        navigate('/scan-loading');
+        // 서명 완료 후 기록지 작성 페이지로 이동 (스캔 로딩이 아님)
+        navigate('/record-ai_scan');
       }, 300);
     } catch (err) {
       console.error('Consent Submit Error:', err);
