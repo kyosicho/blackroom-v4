@@ -17,7 +17,10 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
 
   try {
     console.log("Starting AI Scan with Gemini...");
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // 배포 환경(Vercel 등)에서 키가 제대로 로드되었는지 첫 5자리만 확인 (디버깅용)
+    console.log("API Key Check:", API_KEY?.substring(0, 5) + "****");
+
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     // Base64 데이터 추출 및 형식 확인
     const parts = base64Image.split(",");
