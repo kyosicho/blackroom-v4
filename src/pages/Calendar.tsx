@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Search, Calendar as CalendarIcon } from 'lucide-react';
 import { useAppointments } from '../context/AppointmentContext';
 import { useCustomers } from '../context/CustomerContext';
 import WeeklyCalendar from '../components/WeeklyCalendar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Calendar: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ const Calendar: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showSearch, setShowSearch] = React.useState(false);
   const [viewMode, setViewMode] = React.useState<'month' | 'week'>('month');
+  const [direction, setDirection] = useState(0);
+  const [showPicker, setShowPicker] = useState(false);
   
   // Swipe Logic
   const touchStart = React.useRef<number | null>(null);
@@ -87,6 +90,7 @@ const Calendar: React.FC = () => {
   }, [currentDate, appointments, today]);
 
   const changeMonth = (offset: number) => {
+    setDirection(offset);
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
   };
 
@@ -98,7 +102,7 @@ const Calendar: React.FC = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), month, 1));
   };
 
-  const years = Array.from({ length: 5 }, (_, i) => today.getFullYear() - 2 + i);
+  const years = Array.from({ length: 10 }, (_, i) => today.getFullYear() - 5 + i);
   const months = Array.from({ length: 12 }, (_, i) => i);
 
   // 통합 검색 결과 (이름, 번호, 시술, 메모)
@@ -135,28 +139,86 @@ const Calendar: React.FC = () => {
     setShowDayDetail(true);
   };
 
+  // 모션 설정
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+      scale: 0.95
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 300 : -300,
+      opacity: 0,
+      scale: 0.95
+    })
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark overflow-hidden">
-      <header className="sticky top-0 z-10 bg-background-light dark:bg-background-dark border-b border-primary/10 p-4 flex items-center justify-between">
+    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark overflow-hidden font-display antialiased">
+      <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10 p-4 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-primary/10 rounded-full transition-colors text-slate-900 dark:text-slate-100">
           <ArrowLeft className="size-5" />
         </button>
-        <div className="flex items-center gap-1">
-          <select 
-            value={currentDate.getFullYear()} 
-            onChange={(e) => handleYearChange(parseInt(e.target.value))}
-            className="bg-transparent font-bold text-lg outline-none cursor-pointer text-primary"
+        
+        {/* 통합 날짜 선택기 UI */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowPicker(!showPicker)}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-white/5 rounded-full hover:bg-primary/10 transition-all border border-transparent hover:border-primary/20"
           >
-            {years.map(y => <option key={y} value={y}>{y}년</option>)}
-          </select>
-          <select 
-            value={currentDate.getMonth()} 
-            onChange={(e) => handleMonthChange(parseInt(e.target.value))}
-            className="bg-transparent font-bold text-lg outline-none cursor-pointer text-primary"
-          >
-            {months.map(m => <option key={m} value={m}>{m + 1}월</option>)}
-          </select>
+            <CalendarIcon className="size-4 text-primary" />
+            <span className="font-bold text-lg text-slate-900 dark:text-white">
+              {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+            </span>
+            <ChevronRight className={`size-4 text-slate-400 transition-transform ${showPicker ? 'rotate-90' : 'rotate-270'}`} />
+          </button>
+
+          <AnimatePresence>
+            {showPicker && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowPicker(false)} />
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 p-4 z-50 flex gap-4"
+                >
+                  <div className="flex-1 overflow-y-auto max-h-48 custom-scrollbar">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">Year</p>
+                    {years.map(y => (
+                      <button 
+                        key={y} 
+                        onClick={() => { handleYearChange(y); }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition-colors ${currentDate.getFullYear() === y ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}
+                      >
+                        {y}년
+                      </button>
+                    ))}
+                  </div>
+                  <div className="w-[1px] bg-slate-100 dark:bg-white/5 my-2" />
+                  <div className="flex-1 overflow-y-auto max-h-48 custom-scrollbar">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">Month</p>
+                    {months.map(m => (
+                      <button 
+                        key={m} 
+                        onClick={() => { handleMonthChange(m); setShowPicker(false); }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold transition-colors ${currentDate.getMonth() === m ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}
+                      >
+                        {m + 1}월
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
+
         <button 
           onClick={() => setShowSearch(!showSearch)}
           className="p-2 hover:bg-primary/10 rounded-full transition-colors text-slate-900 dark:text-slate-100"
@@ -260,59 +322,83 @@ const Calendar: React.FC = () => {
             ))}
           </div>
 
-          {viewMode === 'month' ? (
-            <div className="grid grid-cols-7 gap-1 h-full max-h-[60vh] overflow-y-auto">
-              {daysInMonth.map((dayData, i) => {
-                if (!dayData) return <div key={`empty-${i}`} className="aspect-square" />;
-                
-                const { day, date, isToday, appointments: dayApts } = dayData;
-                const isSelected = date === selectedDate;
-                return (
-                  <div 
-                    key={day} 
-                    onClick={() => handleDateClick(date)}
-                    className={`min-h-[70px] flex flex-col items-center p-1 rounded-lg border transition-all cursor-pointer group ${
-                      isSelected ? 'bg-primary border-primary/20 shadow-lg scale-[1.02]' : 
-                      isToday ? 'bg-primary/5 border-primary/20' : 'hover:bg-primary/10 border-transparent'
-                    }`}
-                  >
-                    <span className={`text-sm ${
-                      isSelected ? 'bg-white text-primary size-6 flex items-center justify-center rounded-full font-bold' :
-                      isToday ? 'bg-primary text-white size-6 flex items-center justify-center rounded-full font-bold' : 
-                      'text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors'
-                    }`}>
-                      {day}
-                    </span>
+          <div className="relative overflow-hidden flex-1 min-h-[400px]">
+            <AnimatePresence initial={false} custom={direction}>
+              {viewMode === 'month' ? (
+                <motion.div 
+                  key={currentDate.toISOString()}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 }
+                  }}
+                  className="absolute inset-0 grid grid-cols-7 gap-1 h-full max-h-[60vh] overflow-y-auto pr-1"
+                >
+                  {daysInMonth.map((dayData, i) => {
+                    if (!dayData) return <div key={`empty-${i}`} className="aspect-square" />;
                     
-                    <div className="flex flex-col gap-0.5 w-full mt-1 overflow-hidden">
-                      {dayApts.slice(0, 2).map((apt, idx) => (
-                        <div 
-                          key={idx} 
-                          className={`text-[7px] leading-tight px-1 py-0.5 rounded truncate font-bold text-center ${
-                            isSelected ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'
-                          }`}
-                        >
-                          {apt.procedureType.split(' ')[0]}
+                    const { day, date, isToday, appointments: dayApts } = dayData;
+                    const isSelected = date === selectedDate;
+                    return (
+                      <div 
+                        key={day} 
+                        onClick={() => handleDateClick(date)}
+                        className={`min-h-[70px] flex flex-col items-center p-1 rounded-lg border transition-all cursor-pointer group ${
+                          isSelected ? 'bg-primary border-primary/20 shadow-lg scale-[1.02]' : 
+                          isToday ? 'bg-primary/5 border-primary/20' : 'hover:bg-primary/10 border-transparent'
+                        }`}
+                      >
+                        <span className={`text-sm ${
+                          isSelected ? 'bg-white text-primary size-6 flex items-center justify-center rounded-full font-bold' :
+                          isToday ? 'bg-primary text-white size-6 flex items-center justify-center rounded-full font-bold' : 
+                          'text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors'
+                        }`}>
+                          {day}
+                        </span>
+                        
+                        <div className="flex flex-col gap-0.5 w-full mt-1 overflow-hidden">
+                          {dayApts.slice(0, 2).map((apt, idx) => (
+                            <div 
+                              key={idx} 
+                              className={`text-[7px] leading-tight px-1 py-0.5 rounded truncate font-bold text-center ${
+                                isSelected ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'
+                              }`}
+                            >
+                              {apt.procedureType.split(' ')[0]}
+                            </div>
+                          ))}
+                          {dayApts.length > 2 && (
+                            <div className={`text-[6px] text-center ${isSelected ? 'text-white/60' : 'text-slate-400'}`}>
+                              +{dayApts.length - 2}
+                            </div>
+                          )}
                         </div>
-                      ))}
-                      {dayApts.length > 2 && (
-                        <div className={`text-[6px] text-center ${isSelected ? 'text-white/60' : 'text-slate-400'}`}>
-                          +{dayApts.length - 2}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <WeeklyCalendar 
-              selectedDate={selectedDate} 
-              onDateSelect={(date: string) => handleDateClick(date)} 
-              appointments={appointments}
-              hideHeader
-            />
-          )}
+                      </div>
+                    );
+                  })}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="weekly"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0"
+                >
+                  <WeeklyCalendar 
+                    selectedDate={selectedDate} 
+                    onDateSelect={(date: string) => handleDateClick(date)} 
+                    appointments={appointments}
+                    hideHeader
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </main>
 
