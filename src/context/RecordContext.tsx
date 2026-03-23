@@ -269,16 +269,29 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setCurrentDraft((prev) => {
       if (!prev) return prev;
       
-      const newPigment = [result.pigmentBrand, result.pigmentColor].filter(Boolean).filter(s => s !== '-').join(' ').trim();
-      const newNeedle = [result.needleType, result.needleSize].filter(Boolean).filter(s => s !== '-').join(' ').trim();
+      // 배열 결과가 있으면 배열을 사용, 없으면 기존 단일 필드 조합
+      let newPigmentLines: string[];
+      if (result.pigments && result.pigments.length > 0) {
+        newPigmentLines = result.pigments;
+      } else {
+        const combined = [result.pigmentBrand, result.pigmentColor].filter(Boolean).filter(s => s !== '-').join(' ').trim();
+        newPigmentLines = combined ? [combined] : [];
+      }
       
-      const mergedPigment = prev.pigment 
-        ? (newPigment ? `${prev.pigment}\n${newPigment}` : prev.pigment)
-        : newPigment;
-        
-      const mergedNeedle = prev.needle 
-        ? (newNeedle ? `${prev.needle}\n${newNeedle}` : prev.needle)
-        : newNeedle;
+      let newNeedleLines: string[];
+      if (result.needles && result.needles.length > 0) {
+        newNeedleLines = result.needles;
+      } else {
+        const combined = [result.needleType, result.needleSize].filter(Boolean).filter(s => s !== '-').join(' ').trim();
+        newNeedleLines = combined ? [combined] : [];
+      }
+      
+      // 기존 데이터에 새 항목을 \n 으로 이어 붙이기
+      const existingPigments = prev.pigment ? prev.pigment.split('\n').filter(Boolean) : [];
+      const existingNeedles = prev.needle ? prev.needle.split('\n').filter(Boolean) : [];
+      
+      const mergedPigment = [...existingPigments, ...newPigmentLines].filter(Boolean).join('\n');
+      const mergedNeedle = [...existingNeedles, ...newNeedleLines].filter(Boolean).join('\n');
 
       return { 
         ...prev, 

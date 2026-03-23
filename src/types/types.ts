@@ -78,6 +78,9 @@ export interface AIScanResult {
   needleSize: string;
   notes: string;
   scannedAt: string;
+  // 복수 재료 지원 (v1.2)
+  pigments?: string[];   // 인식된 모든 색소 목록
+  needles?: string[];    // 인식된 모든 니들 목록
 }
 
 export type ShopMode = 'pmu' | 'tattoo';

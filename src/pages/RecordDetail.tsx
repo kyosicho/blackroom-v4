@@ -211,7 +211,7 @@ const RecordDetail: React.FC = () => {
         </section>
 
         {/* 복합 재료 AI 분석 리포트 */}
-        {record.aiScanResult && (record.pigment || record.needle) && (
+        {(record.pigment || record.needle) && (
           <section className="px-4 py-6">
             <div className="bg-slate-900 dark:bg-white/5 p-5 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none">
               <div className="flex items-center gap-2 mb-5">

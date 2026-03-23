@@ -35,77 +35,114 @@ const ScanResult: React.FC = () => {
     <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden font-display">
       <Header title="AI 재료 판독 결과" />
 
-      {/* Analysis Result Cards */}
-      {(scanResult.pigmentBrand || scanResult.pigmentColor) && (
+      {/* Analysis Result Cards - 복수 재료 지원 */}
+      {((scanResult.pigments && scanResult.pigments.length > 0) || scanResult.pigmentBrand || scanResult.pigmentColor) && (
         <div className="px-4 py-4">
           <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-5 mb-4 shadow-sm shadow-primary/5">
             <div className="flex items-center gap-2 mb-4">
               <Activity className="size-5 text-primary" />
-              <h3 className="text-lg font-bold">인식된 재료 정보</h3>
+              <h3 className="text-lg font-bold">인식된 색소 정보</h3>
+              {scanResult.pigments && scanResult.pigments.length > 1 && (
+                <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{scanResult.pigments.length}개 인식</span>
+              )}
             </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">색소 브랜드</span>
-                <span className="text-sm font-bold text-slate-900 dark:text-white">{scanResult.pigmentBrand || '-'}</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">컬러명</span>
-                <span className="text-sm font-bold text-primary">{scanResult.pigmentColor || '-'}</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">제조번호 (Lot No.)</span>
-                <span className="text-[11px] font-mono font-bold bg-slate-100 dark:bg-white/5 px-2 py-1 rounded">{scanResult.lotNumber || 'N/A'}</span>
-              </div>
+            <div className="flex flex-wrap gap-2">
+              {scanResult.pigments && scanResult.pigments.length > 0 ? (
+                scanResult.pigments.map((p, i) => (
+                  <div key={`p-${i}`} className="bg-white dark:bg-primary/10 border border-primary/20 px-4 py-3 rounded-xl shadow-sm">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{p}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="w-full space-y-3">
+                  {scanResult.pigmentBrand && (
+                    <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+                      <span className="text-sm text-slate-500 font-medium">색소 브랜드</span>
+                      <span className="text-sm font-bold">{scanResult.pigmentBrand}</span>
+                    </div>
+                  )}
+                  {scanResult.pigmentColor && (
+                    <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+                      <span className="text-sm text-slate-500 font-medium">컬러명</span>
+                      <span className="text-sm font-bold text-primary">{scanResult.pigmentColor}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+            {scanResult.lotNumber && (
+              <div className="mt-3 pt-3 border-t border-primary/10 flex justify-between items-center">
+                <span className="text-sm text-slate-500 font-medium">제조번호 (Lot No.)</span>
+                <span className="text-[11px] font-mono font-bold bg-slate-100 dark:bg-white/5 px-2 py-1 rounded">{scanResult.lotNumber}</span>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Recommended Products */}
-      {(scanResult.needleType || scanResult.needleSize) && (
+      {/* Needle Info - 복수 지원 */}
+      {((scanResult.needles && scanResult.needles.length > 0) || scanResult.needleType || scanResult.needleSize) && (
         <div className="px-4 py-2">
-          <h3 className="text-sm font-black uppercase tracking-widest text-primary mb-4 ml-1">
-            니들 시스템 정보
-          </h3>
+          <div className="flex items-center gap-2 mb-4 ml-1">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary">니들 시스템 정보</h3>
+            {scanResult.needles && scanResult.needles.length > 1 && (
+              <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{scanResult.needles.length}개 인식</span>
+            )}
+          </div>
           
           <div className="space-y-3">
-            {/* Needle Type */}
-            <div className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[80px] py-3 justify-between shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-12">
-                  <Shield className="size-6" />
+            {scanResult.needles && scanResult.needles.length > 0 ? (
+              scanResult.needles.map((n, i) => (
+                <div key={`n-${i}`} className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[60px] py-3 justify-between shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-10">
+                      <Shield className="size-5" />
+                    </div>
+                    <p className="text-base font-bold leading-normal">{n}</p>
+                  </div>
+                  <div className="shrink-0 text-primary">
+                    <CheckCircle2 className="size-6" />
+                  </div>
                 </div>
-                <div className="flex flex-col justify-center">
-                  <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Needle Type</p>
-                  <p className="text-base font-bold leading-normal">{scanResult.needleType || '-'}</p>
-                </div>
-              </div>
-              <div className="shrink-0 text-primary">
-                <CheckCircle2 className="size-7" />
-              </div>
-            </div>
-
-            {/* Needle Size */}
-            <div className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[80px] py-3 justify-between shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-12">
-                  <Info className="size-6" />
-                </div>
-                <div className="flex flex-col justify-center">
-                  <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Specifications</p>
-                  <p className="text-base font-bold leading-normal">{scanResult.needleSize || '-'}</p>
-                </div>
-              </div>
-              <div className="shrink-0 text-primary">
-                <CheckCircle2 className="size-7" />
-              </div>
-            </div>
+              ))
+            ) : (
+              <>
+                {scanResult.needleType && (
+                  <div className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[60px] py-3 justify-between shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-10">
+                        <Shield className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Needle Type</p>
+                        <p className="text-base font-bold">{scanResult.needleType}</p>
+                      </div>
+                    </div>
+                    <CheckCircle2 className="size-6 text-primary" />
+                  </div>
+                )}
+                {scanResult.needleSize && (
+                  <div className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[60px] py-3 justify-between shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-10">
+                        <Info className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Specifications</p>
+                        <p className="text-base font-bold">{scanResult.needleSize}</p>
+                      </div>
+                    </div>
+                    <CheckCircle2 className="size-6 text-primary" />
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
       
       {/* 둘 다 없을 때 안내 메시지 표시 */}
-      {!scanResult.pigmentBrand && !scanResult.pigmentColor && !scanResult.needleType && !scanResult.needleSize && (
+      {!scanResult.pigmentBrand && !scanResult.pigmentColor && !scanResult.needleType && !scanResult.needleSize && (!scanResult.pigments || scanResult.pigments.length === 0) && (!scanResult.needles || scanResult.needles.length === 0) && (
         <div className="px-4 py-8 flex flex-col items-center justify-center text-center">
           <div className="size-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
             <AlertCircle className="size-8 text-slate-400" />

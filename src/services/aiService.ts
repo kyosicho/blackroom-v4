@@ -30,17 +30,23 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
     const base64Data = parts[1];
     
     const prompt = `
-      이 이미지는 타투 시술용 바늘(Needle) 또는 색소(Pigment/Ink) 사진입니다.
-      사진에서 다음 정보를 추출하여 정확한 JSON 형식으로만 응답해 주세요:
+      이 이미지는 타투 또는 반영구 시술에 사용되는 바늘(Needle)과 색소(Pigment/Ink) 사진입니다.
+      사진에서 보이는 **모든** 색소와 **모든** 바늘 정보를 빠짐없이 추출해 주세요.
+      여러 개의 색소나 바늘이 보이면 반드시 배열에 모두 포함해야 합니다.
+      
+      정확한 JSON 형식으로만 응답해 주세요:
       {
-        "pigmentBrand": "색소 브랜드명 (없으면 null)",
-        "pigmentColor": "색소 컬러명 (없으면 null)",
-        "lotNumber": "색소 용기에서 찾은 제조번호 또는 로트번호 (없으면 null)",
-        "needleType": "바늘 형태 (예: 1RL, 3RL, 11MAG, 1P, 3P 등, 없으면 null)",
-        "needleSize": "바늘 굵기 (예: 0.25mm, 0.30mm, 0.35mm, 없으면 null)",
-        "notes": "추가 분석 메모 (한국어로 작성, 없으면 null)"
+        "pigments": ["색소1 브랜드 컬러명", "색소2 브랜드 컬러명"],
+        "needles": ["바늘1 형태 굵기", "바늘2 형태 굵기"],
+        "pigmentBrand": "대표 색소 브랜드명 (없으면 빈 문자열)",
+        "pigmentColor": "대표 색소 컬러명 (없으면 빈 문자열)",
+        "lotNumber": "제조번호 (없으면 빈 문자열)",
+        "needleType": "대표 바늘 형태 (없으면 빈 문자열)",
+        "needleSize": "대표 바늘 굵기 (없으면 빈 문자열)",
+        "notes": "추가 분석 메모 (한국어로 작성)"
       }
 
+      중요: pigments 배열과 needles 배열에는 사진에서 인식 가능한 모든 항목을 넣어 주세요.
       반드시 JSON 코드 블록(\`\`\`json) 없이 순수 JSON 객체 문자열만 응답하세요. 
       텍스트 설명이나 인사는 생략하고 오직 JSON 데이터만 출력하세요.
     `;
@@ -68,6 +74,12 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
       
       // null, 'null' 등을 빈 문자열로 처리
       const sanitize = (val: any) => (val && val !== 'null' ? String(val) : '');
+      
+      // 배열 필드 처리
+      const sanitizeArray = (val: any): string[] => {
+        if (Array.isArray(val)) return val.map((v: any) => sanitize(v)).filter(Boolean);
+        return [];
+      };
 
       return {
         pigmentBrand: sanitize(parsed.pigmentBrand),
@@ -77,6 +89,8 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
         needleSize: sanitize(parsed.needleSize),
         notes: sanitize(parsed.notes) || 'AI 분석 완료',
         scannedAt: new Date().toISOString(),
+        pigments: sanitizeArray(parsed.pigments),
+        needles: sanitizeArray(parsed.needles),
       };
     } catch (parseError) {
       console.error("JSON Parsing Error:", parseError, "Raw Text:", responseText);
@@ -88,6 +102,8 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
         needleSize: '',
         notes: `AI 텍스트 응답 분석 실패: ${responseText.substring(0, 50)}...`,
         scannedAt: new Date().toISOString(),
+        pigments: [],
+        needles: [],
       };
     }
   } catch (error: any) {
