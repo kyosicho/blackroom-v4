@@ -153,7 +153,7 @@ const RecordAIScan: React.FC = () => {
         >
           <ArrowLeft className="size-6" />
         </button>
-        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">새 {labels.procedure} 기록 v1.1</h2>
+        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">새 {labels.procedure} 기록 v1.2</h2>
         <div className="flex w-12 items-center justify-end">
           <button 
             onClick={handleQuickSave} 
@@ -233,9 +233,9 @@ const RecordAIScan: React.FC = () => {
                 ))}
                 <button 
                   onClick={() => setPigments([...pigments, ''])}
-                  className="flex items-center justify-center gap-1 w-full py-3 border border-dashed border-primary/30 text-primary rounded-xl hover:bg-primary/5 transition-colors text-sm font-bold mt-1"
+                  className="flex items-center justify-center gap-1.5 w-full py-4 border-2 border-dashed border-primary/50 text-primary bg-primary/5 rounded-2xl hover:bg-primary/10 transition-colors text-sm font-bold mt-2 shadow-sm"
                 >
-                  <Plus className="size-4" /> 색소 추가
+                  <Plus className="size-5" /> 색소(Pigment) 추가하기
                 </button>
               </div>
             </div>
@@ -276,9 +276,9 @@ const RecordAIScan: React.FC = () => {
                 ))}
                 <button 
                   onClick={() => setNeedles([...needles, ''])}
-                  className="flex items-center justify-center gap-1 w-full py-3 border border-dashed border-primary/30 text-primary rounded-xl hover:bg-primary/5 transition-colors text-sm font-bold mt-1"
+                  className="flex items-center justify-center gap-1.5 w-full py-4 border-2 border-dashed border-primary/50 text-primary bg-primary/5 rounded-2xl hover:bg-primary/10 transition-colors text-sm font-bold mt-2 shadow-sm"
                 >
-                  <Plus className="size-4" /> 니들 구성 추가
+                  <Plus className="size-5" /> 니들(Needle) 추가하기
                 </button>
               </div>
             </div>

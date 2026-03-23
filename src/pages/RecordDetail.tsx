@@ -273,6 +273,8 @@ const RecordDetail: React.FC = () => {
                 artistName={settings.artistName || '원장님'}
                 beforeImage={record.beforeImage}
                 afterImage={record.afterImage}
+                pigment={record.pigment}
+                needle={record.needle}
               />
               <div className="h-20" /> {/* Spacer */}
             </div>

@@ -9,6 +9,8 @@ interface LegalConsentFormProps {
   artistName: string;
   beforeImage?: string;
   afterImage?: string;
+  pigment?: string;
+  needle?: string;
   isInteractive?: boolean;
   onCheckboxChange?: (index: number, checked: boolean) => void;
   signatureNode?: React.ReactNode;
@@ -21,6 +23,8 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({
   artistName, 
   beforeImage, 
   afterImage, 
+  pigment,
+  needle,
   isInteractive = false,
   onCheckboxChange,
   signatureNode
@@ -63,6 +67,23 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Procedure Material Info */}
+      {(pigment || needle) && (
+        <div className="mb-8 text-[11px] sm:text-sm border border-slate-200 bg-slate-50 p-4 rounded-xl">
+          <p className="font-bold mb-3 text-slate-700 underline underline-offset-4">[사용 재료 내역]</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-[10px] text-slate-500 font-bold mb-1">■ 사용 색소</p>
+              <p className="whitespace-pre-wrap font-medium text-slate-800 leading-relaxed">{pigment || '해당 없음'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-500 font-bold mb-1">■ 니들 구성</p>
+              <p className="whitespace-pre-wrap font-medium text-slate-800 leading-relaxed">{needle || '해당 없음'}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Clauses */}
       <div className="space-y-8 text-xs mb-8">
