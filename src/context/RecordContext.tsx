@@ -268,11 +268,23 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const setAIScanResult = useCallback((result: AIScanResult) => {
     setCurrentDraft((prev) => {
       if (!prev) return prev;
+      
+      const newPigment = [result.pigmentBrand, result.pigmentColor].filter(Boolean).filter(s => s !== '-').join(' ').trim();
+      const newNeedle = [result.needleType, result.needleSize].filter(Boolean).filter(s => s !== '-').join(' ').trim();
+      
+      const mergedPigment = prev.pigment 
+        ? (newPigment ? `${prev.pigment}\n${newPigment}` : prev.pigment)
+        : newPigment;
+        
+      const mergedNeedle = prev.needle 
+        ? (newNeedle ? `${prev.needle}\n${newNeedle}` : prev.needle)
+        : newNeedle;
+
       return { 
         ...prev, 
         aiScanResult: result,
-        pigment: `${result.pigmentBrand} ${result.pigmentColor}`.trim(),
-        needle: `${result.needleType} ${result.needleSize}`.trim()
+        pigment: mergedPigment,
+        needle: mergedNeedle
       };
     });
   }, []);

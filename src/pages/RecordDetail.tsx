@@ -149,11 +149,11 @@ const RecordDetail: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
               <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">사용 {labels.pigment}</p>
-              <p className="font-bold text-sm">{record.pigment || '미입력'}</p>
+              <p className="font-bold text-sm whitespace-pre-wrap leading-relaxed">{record.pigment || '미입력'}</p>
             </div>
             <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">
               <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">니들 구성</p>
-              <p className="font-bold text-sm">{record.needle || '미입력'}</p>
+              <p className="font-bold text-sm whitespace-pre-wrap leading-relaxed">{record.needle || '미입력'}</p>
             </div>
           </div>
           <div className="bg-slate-50 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 p-4 rounded-2xl">

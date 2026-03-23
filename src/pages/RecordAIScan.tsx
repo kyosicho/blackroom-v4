@@ -16,9 +16,12 @@ const RecordAIScan: React.FC = () => {
   const beforeImageRef = useRef<HTMLInputElement>(null);
   const afterImageRef = useRef<HTMLInputElement>(null);
   const additionalImageRef = useRef<HTMLInputElement>(null);
+  const initPigments = currentDraft?.pigment ? currentDraft.pigment.split('\n').filter(Boolean) : [];
+  const [pigments, setPigments] = useState<string[]>(initPigments.length > 0 ? initPigments : ['']);
 
-  const [pigment, setPigment] = useState(currentDraft?.pigment || '');
-  const [needle, setNeedle] = useState(currentDraft?.needle || '');
+  const initNeedles = currentDraft?.needle ? currentDraft.needle.split('\n').filter(Boolean) : [];
+  const [needles, setNeedles] = useState<string[]>(initNeedles.length > 0 ? initNeedles : ['']);
+  
   const [notes, setNotes] = useState(currentDraft?.notes || '');
   const [beforeImage, setBeforeImage] = useState<string | undefined>(currentDraft?.beforeImage);
   const [afterImage, setAfterImage] = useState<string | undefined>(currentDraft?.afterImage);
@@ -31,8 +34,14 @@ const RecordAIScan: React.FC = () => {
     console.log("RecordAIScan v1.1 loaded");
     
     if (currentDraft) {
-      if (!pigment && currentDraft.pigment) setPigment(currentDraft.pigment);
-      if (!needle && currentDraft.needle) setNeedle(currentDraft.needle);
+      if (pigments[0] === '' && pigments.length === 1 && currentDraft.pigment) {
+        const p = currentDraft.pigment.split('\n').filter(Boolean);
+        if (p.length > 0) setPigments(p);
+      }
+      if (needles[0] === '' && needles.length === 1 && currentDraft.needle) {
+        const n = currentDraft.needle.split('\n').filter(Boolean);
+        if (n.length > 0) setNeedles(n);
+      }
       if (!notes && currentDraft.notes) setNotes(currentDraft.notes);
       if (!beforeImage && currentDraft.beforeImage) setBeforeImage(currentDraft.beforeImage);
       if (!afterImage && currentDraft.afterImage) setAfterImage(currentDraft.afterImage);
@@ -93,8 +102,8 @@ const RecordAIScan: React.FC = () => {
   const handleSave = async () => {
     try {
       const finalData = {
-        pigment: pigment || '',
-        needle: needle || '',
+        pigment: pigments.filter(p => p.trim() !== '').join('\n'),
+        needle: needles.filter(n => n.trim() !== '').join('\n'),
         notes: notes || '',
         beforeImage,
         afterImage,
@@ -119,8 +128,8 @@ const RecordAIScan: React.FC = () => {
 
   const handleQuickSave = async () => {
     const finalData = {
-      pigment,
-      needle,
+      pigment: pigments.filter(p => p.trim() !== '').join('\n'),
+      needle: needles.filter(n => n.trim() !== '').join('\n'),
       notes,
       beforeImage,
       afterImage,
@@ -198,13 +207,37 @@ const RecordAIScan: React.FC = () => {
                   <span className="text-xs font-bold uppercase pointer-events-none">AI 판독</span>
                 </label>
               </div>
-              <input 
-                className="block w-full rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary h-12 px-4 outline-none transition-all" 
-                value={pigment}
-                onChange={(e) => setPigment(e.target.value)}
-                placeholder={`예: EB22 다크 브라운`}
-                type="text"
-              />
+              <div className="flex flex-col gap-2">
+                {pigments.map((p, index) => (
+                  <div key={`pigment-${index}`} className="flex items-center gap-2">
+                    <input 
+                      className="block w-full rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary h-12 px-4 outline-none transition-all" 
+                      value={p}
+                      onChange={(e) => {
+                        const newPigments = [...pigments];
+                        newPigments[index] = e.target.value;
+                        setPigments(newPigments);
+                      }}
+                      placeholder={`예: EB22 다크 브라운`}
+                      type="text"
+                    />
+                    {pigments.length > 1 && (
+                      <button 
+                        onClick={() => setPigments(pigments.filter((_, i) => i !== index))}
+                        className="p-3 text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-white/5 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 transition-colors shrink-0"
+                      >
+                        <X className="size-5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button 
+                  onClick={() => setPigments([...pigments, ''])}
+                  className="flex items-center justify-center gap-1 w-full py-3 border border-dashed border-primary/30 text-primary rounded-xl hover:bg-primary/5 transition-colors text-sm font-bold mt-1"
+                >
+                  <Plus className="size-4" /> 색소 추가
+                </button>
+              </div>
             </div>
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-1.5 ml-1">
@@ -217,13 +250,37 @@ const RecordAIScan: React.FC = () => {
                   <span className="text-xs font-bold uppercase pointer-events-none">AI 판독</span>
                 </label>
               </div>
-              <input 
-                className="block w-full rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary h-12 px-4 outline-none transition-all" 
-                value={needle}
-                onChange={(e) => setNeedle(e.target.value)}
-                placeholder="예: 1RL 0.25mm"
-                type="text"
-              />
+              <div className="flex flex-col gap-2">
+                {needles.map((n, index) => (
+                  <div key={`needle-${index}`} className="flex items-center gap-2">
+                    <input 
+                      className="block w-full rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary h-12 px-4 outline-none transition-all" 
+                      value={n}
+                      onChange={(e) => {
+                        const newNeedles = [...needles];
+                        newNeedles[index] = e.target.value;
+                        setNeedles(newNeedles);
+                      }}
+                      placeholder="예: 1RL 0.25mm"
+                      type="text"
+                    />
+                    {needles.length > 1 && (
+                      <button 
+                        onClick={() => setNeedles(needles.filter((_, i) => i !== index))}
+                        className="p-3 text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-white/5 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 transition-colors shrink-0"
+                      >
+                        <X className="size-5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button 
+                  onClick={() => setNeedles([...needles, ''])}
+                  className="flex items-center justify-center gap-1 w-full py-3 border border-dashed border-primary/30 text-primary rounded-xl hover:bg-primary/5 transition-colors text-sm font-bold mt-1"
+                >
+                  <Plus className="size-4" /> 니들 구성 추가
+                </button>
+              </div>
             </div>
             <div className="flex flex-col md:col-span-2">
               <span className="text-slate-700 dark:text-slate-300 text-sm font-medium mb-1.5 ml-1">{labels.procedure} 메모</span>
