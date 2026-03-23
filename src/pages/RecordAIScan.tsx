@@ -186,11 +186,16 @@ const RecordAIScan: React.FC = () => {
               <div className="flex items-center justify-between mb-1.5 ml-1">
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">사용 {labels.pigment}</span>
                 <button 
-                  onClick={() => scanInputRef.current?.click()}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("AI Scan Button (Pigment) Clicked");
+                    scanInputRef.current?.click();
+                  }}
                   className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
                 >
-                  <Sparkles className="size-3" />
-                  <span className="text-[10px] font-bold uppercase">재료 판독</span>
+                  <Sparkles className="size-3 pointer-events-none" />
+                  <span className="text-[10px] font-bold uppercase pointer-events-none">재료 판독•</span>
                 </button>
               </div>
               <input 
@@ -205,11 +210,16 @@ const RecordAIScan: React.FC = () => {
               <div className="flex items-center justify-between mb-1.5 ml-1">
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">니들 구성</span>
                 <button 
-                  onClick={() => scanInputRef.current?.click()}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("AI Scan Button (Needle) Clicked");
+                    scanInputRef.current?.click();
+                  }}
                   className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
                 >
-                  <Sparkles className="size-3" />
-                  <span className="text-[10px] font-bold uppercase">재료 판독</span>
+                  <Sparkles className="size-3 pointer-events-none" />
+                  <span className="text-[10px] font-bold uppercase pointer-events-none">재료 판독•</span>
                 </button>
               </div>
               <input 
