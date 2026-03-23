@@ -192,10 +192,10 @@ const RecordAIScan: React.FC = () => {
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">사용 {labels.pigment}</span>
                 <label 
                   htmlFor="ai-material-scan-input"
-                  className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full cursor-pointer"
+                  className="flex items-center gap-1.5 text-white bg-primary hover:bg-primary/90 transition-colors px-3 py-1 rounded-full cursor-pointer shadow-md shadow-primary/20"
                 >
-                  <Sparkles className="size-3 pointer-events-none" />
-                  <span className="text-[10px] font-bold uppercase pointer-events-none">재료 판독•</span>
+                  <Sparkles className="size-3.5 pointer-events-none" />
+                  <span className="text-xs font-bold uppercase pointer-events-none">AI 판독</span>
                 </label>
               </div>
               <input 
@@ -211,10 +211,10 @@ const RecordAIScan: React.FC = () => {
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">니들 구성</span>
                 <label 
                   htmlFor="ai-material-scan-input"
-                  className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full cursor-pointer"
+                  className="flex items-center gap-1.5 text-white bg-primary hover:bg-primary/90 transition-colors px-3 py-1 rounded-full cursor-pointer shadow-md shadow-primary/20"
                 >
-                  <Sparkles className="size-3 pointer-events-none" />
-                  <span className="text-[10px] font-bold uppercase pointer-events-none">재료 판독•</span>
+                  <Sparkles className="size-3.5 pointer-events-none" />
+                  <span className="text-xs font-bold uppercase pointer-events-none">AI 판독</span>
                 </label>
               </div>
               <input 

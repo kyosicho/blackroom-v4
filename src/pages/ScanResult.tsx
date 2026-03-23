@@ -36,69 +36,84 @@ const ScanResult: React.FC = () => {
       <Header title="AI 재료 판독 결과" />
 
       {/* Analysis Result Cards */}
-      <div className="px-4 py-4">
-        <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-5 mb-4 shadow-sm shadow-primary/5">
-          <div className="flex items-center gap-2 mb-4">
-            <Activity className="size-5 text-primary" />
-            <h3 className="text-lg font-bold">인식된 재료 정보</h3>
-          </div>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">색소 브랜드</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{scanResult.pigmentBrand}</span>
+      {(scanResult.pigmentBrand || scanResult.pigmentColor) && (
+        <div className="px-4 py-4">
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-5 mb-4 shadow-sm shadow-primary/5">
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="size-5 text-primary" />
+              <h3 className="text-lg font-bold">인식된 재료 정보</h3>
             </div>
-            <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">컬러명</span>
-              <span className="text-sm font-bold text-primary">{scanResult.pigmentColor}</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-primary/5 pb-2">
-              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">제조번호 (Lot No.)</span>
-              <span className="text-[11px] font-mono font-bold bg-slate-100 dark:bg-white/5 px-2 py-1 rounded">{scanResult.lotNumber}</span>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">색소 브랜드</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">{scanResult.pigmentBrand || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">컬러명</span>
+                <span className="text-sm font-bold text-primary">{scanResult.pigmentColor || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-primary/5 pb-2">
+                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">제조번호 (Lot No.)</span>
+                <span className="text-[11px] font-mono font-bold bg-slate-100 dark:bg-white/5 px-2 py-1 rounded">{scanResult.lotNumber || 'N/A'}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Recommended Products */}
-      <div className="px-4 py-2">
-        <h3 className="text-sm font-black uppercase tracking-widest text-primary mb-4 ml-1">
-          니들 시스템 정보
-        </h3>
-        
-        <div className="space-y-3">
-          {/* Needle Type */}
-          <div className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[80px] py-3 justify-between shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-12">
-                <Shield className="size-6" />
+      {(scanResult.needleType || scanResult.needleSize) && (
+        <div className="px-4 py-2">
+          <h3 className="text-sm font-black uppercase tracking-widest text-primary mb-4 ml-1">
+            니들 시스템 정보
+          </h3>
+          
+          <div className="space-y-3">
+            {/* Needle Type */}
+            <div className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[80px] py-3 justify-between shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-12">
+                  <Shield className="size-6" />
+                </div>
+                <div className="flex flex-col justify-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Needle Type</p>
+                  <p className="text-base font-bold leading-normal">{scanResult.needleType || '-'}</p>
+                </div>
               </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Needle Type</p>
-                <p className="text-base font-bold leading-normal">{scanResult.needleType}</p>
+              <div className="shrink-0 text-primary">
+                <CheckCircle2 className="size-7" />
               </div>
             </div>
-            <div className="shrink-0 text-primary">
-              <CheckCircle2 className="size-7" />
-            </div>
-          </div>
 
-          {/* Needle Size */}
-          <div className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[80px] py-3 justify-between shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-12">
-                <Info className="size-6" />
+            {/* Needle Size */}
+            <div className="flex items-center gap-4 bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-2xl px-4 min-h-[80px] py-3 justify-between shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="text-primary flex items-center justify-center rounded-xl bg-primary/10 shrink-0 size-12">
+                  <Info className="size-6" />
+                </div>
+                <div className="flex flex-col justify-center">
+                  <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Specifications</p>
+                  <p className="text-base font-bold leading-normal">{scanResult.needleSize || '-'}</p>
+                </div>
               </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Specifications</p>
-                <p className="text-base font-bold leading-normal">{scanResult.needleSize}</p>
+              <div className="shrink-0 text-primary">
+                <CheckCircle2 className="size-7" />
               </div>
-            </div>
-            <div className="shrink-0 text-primary">
-              <CheckCircle2 className="size-7" />
             </div>
           </div>
         </div>
-      </div>
+      )}
+      
+      {/* 둘 다 없을 때 안내 메시지 표시 */}
+      {!scanResult.pigmentBrand && !scanResult.pigmentColor && !scanResult.needleType && !scanResult.needleSize && (
+        <div className="px-4 py-8 flex flex-col items-center justify-center text-center">
+          <div className="size-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
+            <AlertCircle className="size-8 text-slate-400" />
+          </div>
+          <p className="text-base font-bold text-slate-700 dark:text-slate-300 mb-1">인식된 재료 정보가 없습니다.</p>
+          <p className="text-sm text-slate-500">사진이 흔들렸거나 조명이 어두울 수 있습니다.<br/>라벨이 잘 보이도록 다시 촬영해 보세요.</p>
+        </div>
+      )}
 
       {/* AI Notes */}
       <div className="px-4 py-4">

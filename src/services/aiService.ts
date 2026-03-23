@@ -36,9 +36,9 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
         "pigmentBrand": "색소 브랜드명 (없으면 null)",
         "pigmentColor": "색소 컬러명 (없으면 null)",
         "lotNumber": "색소 용기에서 찾은 제조번호 또는 로트번호 (없으면 null)",
-        "needleType": "바늘 형태 (예: 1RL, 3RL, 11MAG, 1P, 3P 등)",
-        "needleSize": "바늘 굵기 (예: 0.25mm, 0.30mm, 0.35mm)",
-        "notes": "추가 분석 메모 (한국어로 작성)"
+        "needleType": "바늘 형태 (예: 1RL, 3RL, 11MAG, 1P, 3P 등, 없으면 null)",
+        "needleSize": "바늘 굵기 (예: 0.25mm, 0.30mm, 0.35mm, 없으면 null)",
+        "notes": "추가 분석 메모 (한국어로 작성, 없으면 null)"
       }
 
       반드시 JSON 코드 블록(\`\`\`json) 없이 순수 JSON 객체 문자열만 응답하세요. 
@@ -64,26 +64,29 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
       // JSON 파싱 시도: 정규표현식을 사용하여 JSON 객체 부분만 추출 (더 견고한 파싱)
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       const cleanJson = jsonMatch ? jsonMatch[0] : responseText.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(cleanJson);
+      let parsed = JSON.parse(cleanJson);
+      
+      // null, 'null' 등을 빈 문자열로 처리
+      const sanitize = (val: any) => (val && val !== 'null' ? String(val) : '');
 
       return {
-        pigmentBrand: parsed.pigmentBrand || '미판독',
-        pigmentColor: parsed.pigmentColor || '미판독',
-        lotNumber: parsed.lotNumber || 'N/A',
-        needleType: parsed.needleType || '미판독',
-        needleSize: parsed.needleSize || '미판독',
-        notes: parsed.notes || 'AI 분석 완료',
+        pigmentBrand: sanitize(parsed.pigmentBrand),
+        pigmentColor: sanitize(parsed.pigmentColor),
+        lotNumber: sanitize(parsed.lotNumber),
+        needleType: sanitize(parsed.needleType),
+        needleSize: sanitize(parsed.needleSize),
+        notes: sanitize(parsed.notes) || 'AI 분석 완료',
         scannedAt: new Date().toISOString(),
       };
     } catch (parseError) {
       console.error("JSON Parsing Error:", parseError, "Raw Text:", responseText);
       return {
-        pigmentBrand: '판독 오류',
-        pigmentColor: '텍스트 응답 확인 필요',
-        lotNumber: 'N/A',
-        needleType: 'N/A',
-        needleSize: 'N/A',
-        notes: `AI가 JSON 형식이 아닌 일반 텍스트로 응답했습니다: ${responseText.substring(0, 100)}...`,
+        pigmentBrand: '',
+        pigmentColor: '',
+        lotNumber: '',
+        needleType: '',
+        needleSize: '',
+        notes: `AI 텍스트 응답 분석 실패: ${responseText.substring(0, 50)}...`,
         scannedAt: new Date().toISOString(),
       };
     }
