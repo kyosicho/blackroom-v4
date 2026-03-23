@@ -283,14 +283,17 @@ const NewAppointment: React.FC = () => {
               </div>
             </div>
 
-            {selectedProcedure && (
-              <button 
-                onClick={() => setStep(3)}
-                className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg mt-4"
-              >
-                다음 단계로 (일시 선택)
-              </button>
-            )}
+            <button 
+              disabled={!selectedProcedure}
+              onClick={() => setStep(3)}
+              className={`w-full font-bold py-4 rounded-xl shadow-lg mt-4 transition-all ${
+                selectedProcedure 
+                  ? 'bg-primary text-white shadow-primary/20 transform active:scale-[0.98]' 
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+              }`}
+            >
+              다음 단계로 (일시 선택)
+            </button>
           </div>
         )}
 
