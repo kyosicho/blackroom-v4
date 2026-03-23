@@ -80,7 +80,7 @@ const ScanLoading: React.FC = () => {
         >
           <X className="size-6" />
         </button>
-        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center">AI Material Scan</h2>
+        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center font-display">AI 재료 판독 중</h2>
         <div className="size-12"></div>
       </div>
 
@@ -115,10 +115,10 @@ const ScanLoading: React.FC = () => {
           </div>
 
           <div className="text-center space-y-3">
-            <h3 className="text-white tracking-tight text-2xl font-bold leading-tight">Scanning in progress...</h3>
+            <h3 className="text-white tracking-tight text-2xl font-bold leading-tight">AI 판독 진행 중...</h3>
             <div className="flex flex-col gap-2 items-center">
-              <p className="text-white text-base font-medium leading-normal">AI가 색소 및 니들을 판독 중입니다...</p>
-              <p className="text-primary/70 text-sm font-normal leading-normal">잠시만 기다려 주세요</p>
+              <p className="text-white text-base font-medium leading-normal">사진에서 색소 및 니들 정보를 추출하고 있습니다.</p>
+              <p className="text-primary/70 text-sm font-normal leading-normal tracking-wide">분석이 완료될 때까지 잠시만 기다려 주세요</p>
             </div>
           </div>
         </div>
@@ -129,7 +129,7 @@ const ScanLoading: React.FC = () => {
         {/* Progress Bar */}
         <div className="flex flex-col gap-3">
           <div className="flex justify-between items-end">
-            <span className="text-primary text-xs font-bold uppercase tracking-widest">Processing</span>
+            <span className="text-primary text-xs font-bold uppercase tracking-widest">분석 진행률</span>
             <span className="text-slate-900 dark:text-white text-sm font-bold">{progress}%</span>
           </div>
           <div className="h-2 w-full rounded-full bg-primary/20 overflow-hidden">
@@ -141,14 +141,14 @@ const ScanLoading: React.FC = () => {
         <div className="flex gap-4">
           <button className="flex h-14 flex-1 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors">
             <Image className="size-5 mr-2" />
-            <span className="font-bold">Gallery</span>
+            <span className="font-bold">갤러리</span>
           </button>
           <button 
             onClick={() => navigate(-1)}
             className="flex h-14 flex-[2] items-center justify-center rounded-xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform"
           >
             <Ban className="size-5 mr-2" />
-            <span className="truncate">Cancel Analysis</span>
+            <span className="truncate">분석 취소</span>
           </button>
         </div>
       </div>

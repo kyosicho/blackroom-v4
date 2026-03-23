@@ -35,13 +35,14 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
       {
         "pigmentBrand": "색소 브랜드명 (없으면 null)",
         "pigmentColor": "색소 컬러명 (없으면 null)",
-        "lotNumber": "제조번호 (없으면 null)",
-        "needleType": "바늘 형태 (예: 1RL, 3RL, 11MAG)",
-        "needleSize": "바늘 굵기 (예: 0.25mm, 0.30mm)",
-        "notes": "추가 분석 메모"
+        "lotNumber": "색소 용기에서 찾은 제조번호 또는 로트번호 (없으면 null)",
+        "needleType": "바늘 형태 (예: 1RL, 3RL, 11MAG, 1P, 3P 등)",
+        "needleSize": "바늘 굵기 (예: 0.25mm, 0.30mm, 0.35mm)",
+        "notes": "추가 분석 메모 (한국어로 작성)"
       }
 
-      반드시 JSON 코드 블록(\`\`\`json) 없이 순수 JSON 객체 문자열만 응답하세요.
+      반드시 JSON 코드 블록(\`\`\`json) 없이 순수 JSON 객체 문자열만 응답하세요. 
+      텍스트 설명이나 인사는 생략하고 오직 JSON 데이터만 출력하세요.
     `;
 
     const result = await model.generateContent([
@@ -59,8 +60,9 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
     console.log("AI Response Raw Content:", responseText);
 
     try {
-      // JSON 파싱 시도 (코드 블록이나 불필요한 텍스트 제거)
-      const cleanJson = responseText.replace(/```json|```/g, "").trim();
+      // JSON 파싱 시도: 정규표현식을 사용하여 JSON 객체 부분만 추출 (더 견고한 파싱)
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      const cleanJson = jsonMatch ? jsonMatch[0] : responseText.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(cleanJson);
 
       return {

@@ -4,7 +4,11 @@ import type { Customer, Appointment, ProcedureRecord, AppSettings } from '../typ
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase configuration is missing! Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env');
+}
+
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
 // 헬퍼: 객체 키 변환 (DB snake_case -> App camelCase)
 const toCamel = (obj: any): any => {
@@ -48,6 +52,10 @@ export const supabaseService = {
         .from('customers')
         .select('*')
         .eq('shop_id', shopId);
+      
+      if (error && error.code === 'PGRST116') { // 테이블 없음 또는 권한 문제
+        console.error('Supabase Error: "customers" table not found or restricted. Please check SQL migrations.');
+      }
       return { data: (data ? toCamel(data) : null) as Customer[] | null, error };
     } catch (error) {
       console.error('getCustomers Error:', error);
