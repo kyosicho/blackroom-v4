@@ -446,7 +446,7 @@ const Settings: React.FC = () => {
         </section>
 
         <div className="text-center text-xs text-slate-400 pt-4">
-          <p>BLACKROOM v1.0.0</p>
+          <p>BLACKROOM v1.1.0</p>
           <p className="mt-1">© 2026 BLACKROOM Studio</p>
         </div>
       </main>
