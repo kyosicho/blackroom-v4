@@ -27,6 +27,9 @@ const RecordAIScan: React.FC = () => {
 
   // Hydration sync: currentDraft가 로컬 스토리지에서 나중에 로드될 경우 대비
   React.useEffect(() => {
+    // 배포 확인용 알림 (작동 확인 후 제거 예정)
+    console.log("RecordAIScan v1.1 loaded");
+    
     if (currentDraft) {
       if (!pigment && currentDraft.pigment) setPigment(currentDraft.pigment);
       if (!needle && currentDraft.needle) setNeedle(currentDraft.needle);
