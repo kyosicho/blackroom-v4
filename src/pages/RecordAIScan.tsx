@@ -142,7 +142,7 @@ const RecordAIScan: React.FC = () => {
         >
           <ArrowLeft className="size-6" />
         </button>
-        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">새 {labels.procedure} 기록</h2>
+        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">새 {labels.procedure} 기록 v1.1</h2>
         <div className="flex w-12 items-center justify-end">
           <button 
             onClick={handleQuickSave} 
@@ -168,14 +168,17 @@ const RecordAIScan: React.FC = () => {
           </div>
         </section>
 
-        {/* AI 판독을 위한 숨겨진 입력창 - hidden 대신 opacity-0으로 브라우저 호환성 확보 */}
+        {/* AI 판독을 위한 숨겨진 입력창 - label(htmlFor) 연동 방식으로 변경하여 100% 작동 보장 */}
         <input 
-          ref={scanInputRef} 
+          id="ai-material-scan-input"
           type="file" 
           accept="image/*" 
-          capture="environment" 
           className="opacity-0 pointer-events-none absolute w-0 h-0" 
-          onChange={handleAIScanSource} 
+          onChange={(e) => {
+            handleAIScanSource(e);
+            // 동일 파일 재선택 가능하도록 값 초기화
+            e.target.value = '';
+          }} 
         />
 
         {/* Procedure Details */}
@@ -185,18 +188,13 @@ const RecordAIScan: React.FC = () => {
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-1.5 ml-1">
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">사용 {labels.pigment}</span>
-                <button 
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log("AI Scan Button (Pigment) Clicked");
-                    scanInputRef.current?.click();
-                  }}
-                  className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
+                <label 
+                  htmlFor="ai-material-scan-input"
+                  className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full cursor-pointer"
                 >
                   <Sparkles className="size-3 pointer-events-none" />
                   <span className="text-[10px] font-bold uppercase pointer-events-none">재료 판독•</span>
-                </button>
+                </label>
               </div>
               <input 
                 className="block w-full rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary h-12 px-4 outline-none transition-all" 
@@ -209,18 +207,13 @@ const RecordAIScan: React.FC = () => {
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-1.5 ml-1">
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">니들 구성</span>
-                <button 
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log("AI Scan Button (Needle) Clicked");
-                    scanInputRef.current?.click();
-                  }}
-                  className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full"
+                <label 
+                  htmlFor="ai-material-scan-input"
+                  className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-2 py-0.5 rounded-full cursor-pointer"
                 >
                   <Sparkles className="size-3 pointer-events-none" />
                   <span className="text-[10px] font-bold uppercase pointer-events-none">재료 판독•</span>
-                </button>
+                </label>
               </div>
               <input 
                 className="block w-full rounded-xl border border-slate-200 dark:border-primary/20 bg-white dark:bg-primary/5 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary h-12 px-4 outline-none transition-all" 
