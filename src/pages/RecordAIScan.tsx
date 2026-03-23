@@ -59,8 +59,10 @@ const RecordAIScan: React.FC = () => {
 
   const handleAIScanSource = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    console.log("AI Scan Source Change detected:", file?.name);
     if (file) {
       handleImageUpload(file, (dataUrl) => {
+        console.log("Image upload/compression complete, navigating to loading...");
         // 이미지를 가지고 로딩 페이지로 이동
         navigate('/scan-loading', { state: { image: dataUrl } });
       });
@@ -166,13 +168,13 @@ const RecordAIScan: React.FC = () => {
           </div>
         </section>
 
-        {/* hidden input for AI scan */}
+        {/* AI 판독을 위한 숨겨진 입력창 - hidden 대신 opacity-0으로 브라우저 호환성 확보 */}
         <input 
           ref={scanInputRef} 
           type="file" 
           accept="image/*" 
           capture="environment" 
-          className="hidden" 
+          className="opacity-0 pointer-events-none absolute w-0 h-0" 
           onChange={handleAIScanSource} 
         />
 

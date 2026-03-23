@@ -40,8 +40,12 @@ const ScanLoading: React.FC = () => {
         }, 500);
       } catch (err: any) {
         clearInterval(progressInterval);
-        setError(err.message || '분석 중 오류가 발생했습니다.');
-        console.error(err);
+        let message = err.message || '분석 중 오류가 발생했습니다.';
+        if (message.includes('API 키가 설정되지 않았습니다')) {
+          message = '서버 설정 오류: AI 분석 키(API KEY)가 등록되지 않았습니다. 관리자에게 문의하세요.';
+        }
+        setError(message);
+        console.error("Scan Error:", err);
       }
     };
 
