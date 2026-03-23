@@ -40,7 +40,6 @@ const RecordAIScan: React.FC = () => {
     }
   }, [currentDraft]);
 
-  const scanInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = async (file: File, callback: (dataUrl: string) => void) => {
     try {
