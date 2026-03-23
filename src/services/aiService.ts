@@ -30,36 +30,35 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
     const base64Data = parts[1];
     
     const prompt = `
-      이 이미지는 타투 또는 반영구 시술에 사용되는 바늘(Needle)과 색소(Pigment/Ink) 사진입니다.
-      포장지, 라벨, 용기에 적힌 글씨를 꼼꼼하게 읽고, 사진에서 보이는 **모든** 색소와 **모든** 바늘 정보를 빠짐없이 추출해 주세요.
-      여러 개의 색소나 바늘이 보이면 반드시 배열에 모두 포함해야 합니다.
+      이 이미지는 타투 또는 반영구 시술에 사용되는 바늘(Needle/Cartridge)과 색소(Pigment/Ink) 사진입니다.
+      포장지, 라벨, 용기에 적힌 아주 작은 글씨까지 꼼꼼하게 읽고, 사진에서 보이는 **모든** 색소와 **모든** 바늘 정보를 빠짐없이 추출해 주세요.
       
-      바늘(Needle) 판독 가이드:
-      - 바늘 형태 예시: 1RL, 3RL, 5RL, 7RL, 9RL, 11RL, 14RL, 1P, 3P, 5P, 7MAG, 9MAG, 11MAG, 13MAG, 15MAG, 5RS, 7RS, 9RS, 5F, 7F, 9F, 1R, 3R, U1 등
-      - 바늘 굵기 예시: 0.18mm, 0.20mm, 0.25mm, 0.30mm, 0.35mm, 0.40mm
-      - "needles" 배열에는 "형태 굵기"를 합쳐서 적어주세요 (예: "1RL 0.25mm", "5MAG 0.35mm")
-      - 포장지에 숫자와 알파벳 조합이 보이면 바늘 형태일 가능성이 높습니다
+      바늘(Needle/Cartridge) 판독 초정밀 가이드:
+      - 주요 바늘 브랜드: Mast, Dragonhawk, Kwadron, Cheyenne, Vertix, Bishop, EZ, Blackroom, WJX, Bigasp 등이 보이면 브랜드명도 포함하세요.
+      - 바늘 형태(Type): 1RL, 3RL, 5RL, 7RL, 9RL, 11RL, 14RL, 1P, 3P, 5P, 7MAG(M1), 9MAG, 11MAG, 13MAG, 5RS, 7RS, 9RS, 5F, 7F, 9F, 1R, 3R, U1, Nano 등
+      - 바늘 굵기(Size): 0.18, 0.20, 0.25, 0.30, 0.35, 0.40, 10, 12, 08 (보통 mm 단위나 숫자로 표기됨)
+      - 중요: 포장지 구석의 "1203RL" 같은 숫자는 "0.35mm 3RL"을 뜻합니다. (앞 두자리 12=0.35, 10=0.30, 08=0.25)
+      - "needles" 배열 항목 예: "Mast Pro 1RL 0.25mm", "Kwadron 3RL 0.30mm"
 
-      색소(Pigment) 판독 가이드:
-      - "pigments" 배열에는 "브랜드명 컬러명"을 합쳐서 적어주세요 (예: "EB22 다크 브라운", "Perma Blend Onyx")
-      - 용기나 라벨에 적힌 브랜드, 색상명, LOT 번호를 최대한 정확히 읽어주세요
+      색소(Pigment) 판독 초정밀 가이드:
+      - 주요 색소 브랜드: Perma Blend, Tina Davies, Evenflo, World Famous, Intenze, Fusion, Eternal, Dynamic, Biotouch 등
+      - "pigments" 배열 항목 예: "Perma Blend Onyx", "Tina Davies Dark 600", "Dynamic Black"
+      - 제조번호(LOT)가 보이면 별도 필드에 꼭 추출하세요.
 
       정확한 JSON 형식으로만 응답해 주세요:
       {
-        "pigments": ["브랜드1 컬러명1", "브랜드2 컬러명2"],
-        "needles": ["1RL 0.25mm", "5MAG 0.35mm"],
-        "pigmentBrand": "대표 색소 브랜드명 (없으면 빈 문자열)",
-        "pigmentColor": "대표 색소 컬러명 (없으면 빈 문자열)",
+        "pigments": ["브랜드 컬러명1", "브랜드 컬러명2"],
+        "needles": ["브랜드 형태 굵기1", "브랜드 형태 굵기2"],
+        "pigmentBrand": "대표 브랜드 (없으면 빈 문자열)",
+        "pigmentColor": "대표 컬러 (없으면 빈 문자열)",
         "lotNumber": "제조번호 (없으면 빈 문자열)",
-        "needleType": "대표 바늘 형태 예: 1RL, 3RL, 11MAG (없으면 빈 문자열)",
-        "needleSize": "대표 바늘 굵기 예: 0.25mm, 0.30mm (없으면 빈 문자열)",
-        "notes": "추가 분석 메모 (한국어로 작성)"
+        "needleType": "대표 형태 (없으면 빈 문자열)",
+        "needleSize": "대표 굵기 (없으면 빈 문자열)",
+        "notes": "추가 분석 메모 (한국어로 작성, 바늘의 특징이나 용도 등 포함)"
       }
 
-      중요: pigments 배열과 needles 배열에는 사진에서 인식 가능한 모든 항목을 넣어 주세요.
-      포장지의 작은 글씨도 주의 깊게 읽어주세요.
+      중료: 여러 개의 재료가 찍혔다면 절대 빠뜨리지 말고 모두 배열에 담으세요.
       반드시 JSON 코드 블록(\`\`\`json) 없이 순수 JSON 객체 문자열만 응답하세요. 
-      텍스트 설명이나 인사는 생략하고 오직 JSON 데이터만 출력하세요.
     `;
 
     console.log("Sending request to Gemini model...");
