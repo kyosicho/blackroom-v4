@@ -17,10 +17,10 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
 
   try {
     console.log("Starting AI Scan with Gemini...");
-    // 배포 환경(Vercel 등)에서 키가 제대로 로드되었는지 첫 5자리만 확인 (디버깅용)
-    console.log("API Key Check:", API_KEY?.substring(0, 5) + "****");
+    const maskedKey = API_KEY ? `${API_KEY.substring(0, 6)}***${API_KEY.substring(API_KEY.length - 4)}` : "MISSING";
+    console.log("Gemini API Key Loaded:", maskedKey);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Base64 데이터 추출 및 형식 확인
     const parts = base64Image.split(",");
@@ -45,6 +45,7 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
       텍스트 설명이나 인사는 생략하고 오직 JSON 데이터만 출력하세요.
     `;
 
+    console.log("Sending request to Gemini model...");
     const result = await model.generateContent([
       prompt,
       {
@@ -57,7 +58,7 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
 
     const response = await result.response;
     const responseText = response.text();
-    console.log("AI Response Raw Content:", responseText);
+    console.log("AI Response Received Successfully");
 
     try {
       // JSON 파싱 시도: 정규표현식을 사용하여 JSON 객체 부분만 추출 (더 견고한 파싱)
@@ -76,22 +77,29 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
       };
     } catch (parseError) {
       console.error("JSON Parsing Error:", parseError, "Raw Text:", responseText);
-      // JSON 파싱 실패 시 텍스트라도 응답
       return {
         pigmentBrand: '판독 오류',
         pigmentColor: '텍스트 응답 확인 필요',
         lotNumber: 'N/A',
         needleType: 'N/A',
         needleSize: 'N/A',
-        notes: `AI가 JSON 형식이 아닌 텍스트로 응답했습니다: ${responseText.substring(0, 100)}...`,
+        notes: `AI가 JSON 형식이 아닌 일반 텍스트로 응답했습니다: ${responseText.substring(0, 100)}...`,
         scannedAt: new Date().toISOString(),
       };
     }
   } catch (error: any) {
-    console.error("AI Scan Core Error:", error);
-    if (error.message?.includes("API_KEY_INVALID")) {
-      throw new Error("유효하지 않은 API 키입니다. 키 발급 상태를 확인해 주세요.");
+    console.error("AI Scan Core Error Details:", error);
+    
+    let errorMessage = error.message || '알 수 없는 오류';
+    
+    if (errorMessage.includes("API_KEY_INVALID")) {
+      errorMessage = "유효하지 않은 API 키입니다. Google AI Studio에서 키 상태를 확인해 주세요.";
+    } else if (errorMessage.includes("SAFETY")) {
+      errorMessage = "거절됨: 이미지에 부적절하거나 안전 가이드라인에 위배되는 내용이 포함되어 있을 수 있습니다.";
+    } else if (errorMessage.includes("fetch failed")) {
+      errorMessage = "네트워크 오류: Google 서버에 연결할 수 없습니다. 인터넷 상태를 확인해 주세요.";
     }
-    throw new Error(`이미지 분석 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+    
+    throw new Error(`이미지 분석 실패: ${errorMessage}`);
   }
 };
