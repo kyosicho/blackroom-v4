@@ -210,8 +210,8 @@ const RecordDetail: React.FC = () => {
           </div>
         </section>
 
-        {/* AI 분석 요약 리포트 */}
-        {record.aiScanResult && (
+        {/* 복합 재료 AI 분석 리포트 */}
+        {record.aiScanResult && (record.pigment || record.needle) && (
           <section className="px-4 py-6">
             <div className="bg-slate-900 dark:bg-white/5 p-5 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none">
               <div className="flex items-center gap-2 mb-5">
@@ -220,23 +220,33 @@ const RecordDetail: React.FC = () => {
                 </div>
                 <h3 className="text-white text-sm font-bold">AI Material Analysis Report</h3>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/10 p-3 rounded-2xl text-center">
-                  <p className="text-[9px] text-white/40 uppercase mb-1">Pigment Brand</p>
-                  <p className="text-white text-xs font-bold">{record.aiScanResult.pigmentBrand}</p>
-                </div>
-                <div className="bg-white/10 p-3 rounded-2xl text-center">
-                  <p className="text-[9px] text-white/40 uppercase mb-1">Pigment Color</p>
-                  <p className="text-white text-xs font-bold">{record.aiScanResult.pigmentColor}</p>
-                </div>
-                <div className="bg-white/10 p-3 rounded-2xl text-center">
-                  <p className="text-[9px] text-white/40 uppercase mb-1">Needle Type</p>
-                  <p className="text-white text-xs font-bold">{record.aiScanResult.needleType}</p>
-                </div>
-                <div className="bg-white/10 p-3 rounded-2xl text-center">
-                  <p className="text-[9px] text-white/40 uppercase mb-1">Needle Size</p>
-                  <p className="text-white text-xs font-bold">{record.aiScanResult.needleSize}</p>
-                </div>
+              
+              <div className="space-y-5">
+                {record.pigment && (
+                  <div>
+                    <p className="text-[10px] text-white/50 uppercase mb-2 font-black tracking-widest pl-1">Pigments</p>
+                    <div className="flex flex-wrap gap-2">
+                      {record.pigment.split('\n').filter(Boolean).map((p, i) => (
+                        <div key={`p-${i}`} className="bg-white/10 border border-white/5 px-3 py-2 rounded-xl">
+                          <p className="text-white text-xs font-bold leading-tight">{p}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {record.needle && (
+                  <div>
+                    <p className="text-[10px] text-white/50 uppercase mb-2 font-black tracking-widest pl-1">Needles</p>
+                    <div className="flex flex-wrap gap-2">
+                      {record.needle.split('\n').filter(Boolean).map((n, i) => (
+                        <div key={`n-${i}`} className="bg-white/10 border border-white/5 px-3 py-2 rounded-xl">
+                          <p className="text-white text-xs font-bold leading-tight">{n}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </section>
