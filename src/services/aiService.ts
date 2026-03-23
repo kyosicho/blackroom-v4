@@ -20,7 +20,7 @@ export const scanMaterialImage = async (base64Image: string): Promise<AIScanResu
     const maskedKey = API_KEY ? `${API_KEY.substring(0, 6)}***${API_KEY.substring(API_KEY.length - 4)}` : "MISSING";
     console.log("Gemini API Key Loaded:", maskedKey);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Base64 데이터 추출 및 형식 확인
     const parts = base64Image.split(",");
