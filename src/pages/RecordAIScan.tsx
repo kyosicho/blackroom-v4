@@ -74,13 +74,8 @@ const RecordAIScan: React.FC = () => {
     if (file) {
       handleImageUpload(file, (dataUrl) => {
         console.log("Image upload/compression complete, navigating to loading...");
-        // sessionStorage에 이미지 저장 (history.pushState 크기 제한 우회)
-        try {
-          sessionStorage.setItem('ai_scan_image', dataUrl);
-        } catch (storageErr) {
-          console.error('sessionStorage save failed:', storageErr);
-        }
-        navigate('/scan-loading');
+        // 이미지를 가지고 로딩 페이지로 이동
+        navigate('/scan-loading', { state: { image: dataUrl } });
       });
     }
   };
