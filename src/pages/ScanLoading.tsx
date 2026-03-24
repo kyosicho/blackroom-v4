@@ -1,23 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { X, Fingerprint, Image, Ban } from 'lucide-react';
 import scanImg from '../assets/images/ai_scan_loading.png';
 import { scanMaterialImage } from '../services/aiService';
 
 const ScanLoading: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const scannedImage = location.state?.image;
-
   useEffect(() => {
+    // sessionStorage에서 이미지 읽기 (history.pushState 크기 제한 우회)
+    const scannedImage = sessionStorage.getItem('ai_scan_image');
+    
     if (!scannedImage) {
       alert('판독할 이미지가 없습니다.');
       navigate(-1);
       return;
     }
+
+    // 읽은 후 즉시 삭제하여 메모리 확보
+    sessionStorage.removeItem('ai_scan_image');
 
     let progressInterval: any;
 
@@ -36,7 +39,7 @@ const ScanLoading: React.FC = () => {
         setProgress(100);
         
         setTimeout(() => {
-          navigate('/scan-result', { state: { result } });
+          navigate('/scan-result', { state: { result }, replace: true });
         }, 500);
       } catch (err: any) {
         clearInterval(progressInterval);
@@ -54,7 +57,7 @@ const ScanLoading: React.FC = () => {
     return () => {
       if (progressInterval) clearInterval(progressInterval);
     };
-  }, [navigate, scannedImage]);
+  }, [navigate]);
 
   if (error) {
     return (

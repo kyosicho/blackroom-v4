@@ -173,7 +173,7 @@ const ScanResult: React.FC = () => {
       {/* Actions */}
       <div className="p-6 mt-auto mb-8 flex flex-col gap-3">
         <button 
-          onClick={() => navigate('/record-ai_scan')}
+          onClick={() => navigate('/record-ai_scan', { replace: true })}
           className="w-full h-14 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
         >
           <RotateCcw className="size-5" />
