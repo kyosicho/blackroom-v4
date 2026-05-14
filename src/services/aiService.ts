@@ -1,134 +1,59 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AIScanResult } from "../types/types";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI(API_KEY);
+// Supabase Edge Function URL (API 키는 서버에만 보관, 앱에는 없음)
+const EDGE_FUNCTION_URL =
+  "https://dhxffxhiiypfskpamoea.supabase.co/functions/v1/gemini-scan";
 
 /**
  * 이미지(Base64)를 분석하여 타투 바늘 및 색소 정보를 추출합니다.
+ * Gemini API는 Supabase Edge Function(서버)을 통해 안전하게 호출됩니다.
  * @param base64Image "data:image/jpeg;base64,..." 형태의 이미지 데이터
  * @returns 판독된 결과 객체
  */
 export const scanMaterialImage = async (base64Image: string): Promise<AIScanResult> => {
-  if (!API_KEY) {
-    console.error("Gemini API Key is missing. Please check your .env.local file and restart the server.");
-    throw new Error("API 키가 설정되지 않았습니다. .env.local 파일을 확인하고 서버를 재시작해 주세요.");
-  }
-
   try {
-    console.log("Starting AI Scan with Gemini...");
-    const maskedKey = API_KEY ? `${API_KEY.substring(0, 6)}***${API_KEY.substring(API_KEY.length - 4)}` : "MISSING";
-    console.log("Gemini API Key Loaded:", maskedKey);
-
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    console.log("Starting AI Scan via Supabase Edge Function...");
 
     // Base64 데이터 추출 및 형식 확인
     const parts = base64Image.split(",");
     if (parts.length < 2) {
       throw new Error("이미지 데이터 형식이 올바르지 않습니다.");
     }
+
+    // mimeType 추출 (예: "data:image/jpeg;base64" → "image/jpeg")
+    const mimeMatch = parts[0].match(/data:([^;]+);/);
+    const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
     const base64Data = parts[1];
-    
-    const prompt = `
-      이 이미지는 타투 또는 반영구 시술에 사용되는 바늘(Needle/Cartridge)과 색소(Pigment/Ink) 사진입니다.
-      포장지, 라벨, 용기에 적힌 아주 작은 글씨까지 꼼꼼하게 읽고, 사진에서 보이는 **모든** 색소와 **모든** 바늘 정보를 빠짐없이 추출해 주세요.
-      
-      바늘(Needle/Cartridge) 판독 초정밀 가이드:
-      - 주요 바늘 브랜드: Mast, Dragonhawk, Kwadron, Cheyenne, Vertix, Bishop, EZ, Blackroom, WJX, Bigasp 등이 보이면 브랜드명도 포함하세요.
-      - 바늘 형태(Type): 1RL, 3RL, 5RL, 7RL, 9RL, 11RL, 14RL, 1P, 3P, 5P, 7MAG(M1), 9MAG, 11MAG, 13MAG, 5RS, 7RS, 9RS, 5F, 7F, 9F, 1R, 3R, U1, Nano 등
-      - 바늘 굵기(Size): 0.18, 0.20, 0.25, 0.30, 0.35, 0.40, 10, 12, 08 (보통 mm 단위나 숫자로 표기됨)
-      - 중요: 포장지 구석의 "1203RL" 같은 숫자는 "0.35mm 3RL"을 뜻합니다. (앞 두자리 12=0.35, 10=0.30, 08=0.25)
-      - "needles" 배열 항목 예: "Mast Pro 1RL 0.25mm", "Kwadron 3RL 0.30mm"
 
-      색소(Pigment) 판독 초정밀 가이드:
-      - 주요 색소 브랜드: Perma Blend, Tina Davies, Evenflo, World Famous, Intenze, Fusion, Eternal, Dynamic, Biotouch 등
-      - "pigments" 배열 항목 예: "Perma Blend Onyx", "Tina Davies Dark 600", "Dynamic Black"
-      - 제조번호(LOT)가 보이면 별도 필드에 꼭 추출하세요.
-
-      정확한 JSON 형식으로만 응답해 주세요:
-      {
-        "pigments": ["브랜드 컬러명1", "브랜드 컬러명2"],
-        "needles": ["브랜드 형태 굵기1", "브랜드 형태 굵기2"],
-        "pigmentBrand": "대표 브랜드 (없으면 빈 문자열)",
-        "pigmentColor": "대표 컬러 (없으면 빈 문자열)",
-        "lotNumber": "제조번호 (없으면 빈 문자열)",
-        "needleType": "대표 형태 (없으면 빈 문자열)",
-        "needleSize": "대표 굵기 (없으면 빈 문자열)",
-        "notes": "추가 분석 메모 (한국어로 작성, 바늘의 특징이나 용도 등 포함)"
-      }
-
-      중료: 여러 개의 재료가 찍혔다면 절대 빠뜨리지 말고 모두 배열에 담으세요.
-      반드시 JSON 코드 블록(\`\`\`json) 없이 순수 JSON 객체 문자열만 응답하세요. 
-    `;
-
-    console.log("Sending request to Gemini model...");
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: "image/jpeg",
-        },
+    const response = await fetch(EDGE_FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ]);
+      body: JSON.stringify({
+        base64Image: base64Data,
+        mimeType,
+      }),
+    });
 
-    const response = await result.response;
-    const responseText = response.text();
-    console.log("AI Response Received Successfully");
-
-    try {
-      // JSON 파싱 시도: 정규표현식을 사용하여 JSON 객체 부분만 추출 (더 견고한 파싱)
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      const cleanJson = jsonMatch ? jsonMatch[0] : responseText.replace(/```json|```/g, "").trim();
-      let parsed = JSON.parse(cleanJson);
-      
-      // null, 'null' 등을 빈 문자열로 처리
-      const sanitize = (val: any) => (val && val !== 'null' ? String(val) : '');
-      
-      // 배열 필드 처리
-      const sanitizeArray = (val: any): string[] => {
-        if (Array.isArray(val)) return val.map((v: any) => sanitize(v)).filter(Boolean);
-        return [];
-      };
-
-      return {
-        pigmentBrand: sanitize(parsed.pigmentBrand),
-        pigmentColor: sanitize(parsed.pigmentColor),
-        lotNumber: sanitize(parsed.lotNumber),
-        needleType: sanitize(parsed.needleType),
-        needleSize: sanitize(parsed.needleSize),
-        notes: sanitize(parsed.notes) || 'AI 분석 완료',
-        scannedAt: new Date().toISOString(),
-        pigments: sanitizeArray(parsed.pigments),
-        needles: sanitizeArray(parsed.needles),
-      };
-    } catch (parseError) {
-      console.error("JSON Parsing Error:", parseError, "Raw Text:", responseText);
-      return {
-        pigmentBrand: '',
-        pigmentColor: '',
-        lotNumber: '',
-        needleType: '',
-        needleSize: '',
-        notes: `AI 텍스트 응답 분석 실패: ${responseText.substring(0, 50)}...`,
-        scannedAt: new Date().toISOString(),
-        pigments: [],
-        needles: [],
-      };
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({ error: "알 수 없는 오류" }));
+      throw new Error(errData.error || `서버 오류: ${response.status}`);
     }
+
+    const result = await response.json();
+    console.log("AI Scan completed successfully via Edge Function");
+
+    return result as AIScanResult;
   } catch (error: any) {
-    console.error("AI Scan Core Error Details:", error);
-    
-    let errorMessage = error.message || '알 수 없는 오류';
-    
-    if (errorMessage.includes("API_KEY_INVALID")) {
-      errorMessage = "유효하지 않은 API 키입니다. Google AI Studio에서 키 상태를 확인해 주세요.";
-    } else if (errorMessage.includes("SAFETY")) {
-      errorMessage = "거절됨: 이미지에 부적절하거나 안전 가이드라인에 위배되는 내용이 포함되어 있을 수 있습니다.";
-    } else if (errorMessage.includes("fetch failed")) {
-      errorMessage = "네트워크 오류: Google 서버에 연결할 수 없습니다. 인터넷 상태를 확인해 주세요.";
+    console.error("AI Scan Error:", error);
+
+    let errorMessage = error.message || "알 수 없는 오류";
+
+    if (errorMessage.includes("fetch failed") || errorMessage.includes("Failed to fetch")) {
+      errorMessage = "네트워크 오류: 서버에 연결할 수 없습니다. 인터넷 상태를 확인해 주세요.";
     }
-    
+
     throw new Error(`이미지 분석 실패: ${errorMessage}`);
   }
 };
