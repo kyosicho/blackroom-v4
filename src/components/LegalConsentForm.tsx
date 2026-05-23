@@ -1,5 +1,6 @@
-import React from 'react';
-import { Check, Printer } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Check, Download, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import type { Customer, Consent } from '../types/types';
 
 interface LegalConsentFormProps {
@@ -29,17 +30,44 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({
   onCheckboxChange,
   signatureNode
 }) => {
+  const formRef = useRef<HTMLDivElement>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  const handleDownloadImage = async () => {
+    if (!formRef.current || isCapturing) return;
+    setIsCapturing(true);
+    try {
+      const canvas = await html2canvas(formRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      const url = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `동의서_${customer?.name || '고객'}_${new Date().toISOString().slice(0,10)}.png`;
+      link.click();
+    } catch (err) {
+      console.error('Failed to capture consent form:', err);
+      alert('이미지 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
   return (
-    <div className={`bg-white text-slate-900 p-6 sm:p-10 max-w-2xl mx-auto font-serif leading-relaxed relative ${isInteractive ? 'shadow-none border-b-0 rounded-t-3xl' : 'shadow-xl border border-slate-200 rounded-lg'}`}>
+    <div ref={formRef} className={`bg-white text-slate-900 p-6 sm:p-10 max-w-2xl mx-auto font-serif leading-relaxed relative ${isInteractive ? 'shadow-none border-b-0 rounded-t-3xl' : 'shadow-xl border border-slate-200 rounded-lg'}`}>
       {/* Print Button - Only visible on screen and not in interactive mode */}
       {!isInteractive && (
         <button 
-          onClick={() => window.print()}
-          className="absolute top-4 right-4 p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-all no-print flex items-center gap-2 shadow-sm"
-          title="PDF로 저장 / 인쇄"
+          onClick={handleDownloadImage}
+          disabled={isCapturing}
+          className="absolute top-4 right-4 p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-all flex items-center gap-2 shadow-sm z-10"
+          title="이미지로 저장"
+          data-html2canvas-ignore="true"
         >
-          <Printer className="size-5" />
-          <span className="text-xs font-bold">PDF/인쇄</span>
+          {isCapturing ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
+          <span className="text-xs font-bold">{isCapturing ? '저장 중...' : '이미지 저장'}</span>
         </button>
       )}
 
