@@ -13,9 +13,32 @@ const ScanResult: React.FC = () => {
   // state에서 분석 결과 가져오기 (없으면 에러 처리)
   const scanResult: AIScanResult | null = location.state?.result;
 
+  // 프론트엔드에서 실제 기기의 현재 날짜 기준으로 만료 여부 교차 검증
+  let isDanger = scanResult?.safetyStatus === 'danger';
+  let isExpired = scanResult?.isExpired || false;
+
+  if (scanResult?.expirationDate) {
+    const expDate = new Date(scanResult.expirationDate);
+    const today = new Date();
+    // 시간 제외하고 날짜만 비교
+    expDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
+    if (expDate < today) {
+      isDanger = true;
+      isExpired = true;
+    }
+  }
+
   const handleApply = () => {
-    if (scanResult && scanResult.safetyStatus !== 'danger') {
-      setAIScanResult(scanResult);
+    if (scanResult && !isDanger) {
+      // 프론트엔드에서 교차 검증된 결과를 반영하여 컨텍스트에 저장
+      const finalResult = {
+        ...scanResult,
+        isExpired: isExpired,
+        safetyStatus: isDanger ? 'danger' : scanResult.safetyStatus
+      };
+      setAIScanResult(finalResult as AIScanResult);
       navigate('/record-ai_scan');
     }
   };
@@ -30,8 +53,6 @@ const ScanResult: React.FC = () => {
       </div>
     );
   }
-
-  const isDanger = scanResult.safetyStatus === 'danger';
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden font-display">
@@ -48,7 +69,7 @@ const ScanResult: React.FC = () => {
               <div>
                 <h3 className="text-lg font-black text-red-700 dark:text-red-400 mb-1">안전 경고: 부적합 재료 감지</h3>
                 <p className="text-sm text-red-600/80 dark:text-red-400/80 font-medium leading-snug">
-                  {scanResult.isExpired 
+                  {isExpired 
                     ? `유효기간이 초과된 재료입니다. (기한: ${scanResult.expirationDate || '알 수 없음'})`
                     : '안전성이 확인되지 않거나 오염이 의심되는 재료입니다.'}
                 </p>
