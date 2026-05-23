@@ -313,6 +313,13 @@ const RecordAIScan: React.FC = () => {
           </div>
         </section>
 
+        {/* Procedure Details */}
+        <section className="px-4 py-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">{labels.procedure} 상세 정보</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-1.5 ml-1">
+                <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">사용 {labels.pigment}</span>
                 <button 
                   onClick={() => setIsScanning(true)}
                   className="flex items-center gap-1.5 text-white bg-primary hover:bg-primary/90 transition-colors px-3 py-1 rounded-full cursor-pointer shadow-md shadow-primary/20"
