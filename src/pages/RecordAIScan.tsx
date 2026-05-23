@@ -47,7 +47,7 @@ const CameraScanModal: React.FC<{ onClose: () => void, onComplete: (images: stri
     if (isRecording) return;
     setIsRecording(true);
     const capturedImages: string[] = [];
-    const duration = 10000; // 10 seconds
+    const duration = 12000; // 12 seconds
     const interval = 1000; // 1 frame per second
     let elapsed = 0;
 
