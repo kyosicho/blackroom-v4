@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info, Sparkles, Receipt, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info, Sparkles, Receipt, ShieldCheck, CheckCircle2, Download, Share2, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { useRecords } from '../context/RecordContext';
 import { useSettings } from '../context/SettingsContext';
 import { useCustomers } from '../context/CustomerContext';
@@ -19,6 +20,52 @@ const RecordDetail: React.FC = () => {
   const labels = getLabelsByMode(shopMode);
   const [showConsent, setShowConsent] = React.useState(false);
   const [showReceipt, setShowReceipt] = React.useState(false);
+  const [isCapturing, setIsCapturing] = React.useState(false);
+  const receiptRef = React.useRef<HTMLDivElement>(null);
+
+  const handleDownloadReceipt = async () => {
+    if (!receiptRef.current) return;
+    setIsCapturing(true);
+    try {
+      const canvas = await html2canvas(receiptRef.current, { scale: 2, backgroundColor: '#ffffff' });
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `hygiene-receipt-${id?.slice(0,8)}.png`;
+      link.click();
+    } catch (err) {
+      console.error(err);
+      alert('이미지 저장에 실패했습니다.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
+  const handleShareReceipt = async () => {
+    if (!receiptRef.current) return;
+    setIsCapturing(true);
+    try {
+      const canvas = await html2canvas(receiptRef.current, { scale: 2, backgroundColor: '#ffffff' });
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'hygiene-receipt.png', { type: 'image/png' });
+        if (navigator.share) {
+          await navigator.share({
+            title: '디지털 위생 영수증',
+            text: '안전한 시술을 위한 디지털 위생 영수증입니다.',
+            files: [file],
+          });
+        } else {
+          alert('이 브라우저에서는 공유 기능을 지원하지 않습니다. 이미지 저장 버튼을 이용해 주세요.');
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      alert('공유에 실패했습니다.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
 
   const record = id ? getRecord(id) : null;
   const customer = record ? getCustomer(record.customerId) : null;
@@ -284,75 +331,110 @@ const RecordDetail: React.FC = () => {
         {/* Hygiene Receipt Modal Overlay */}
         {showReceipt && (
           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
-              {/* Receipt Header */}
-              <div className="bg-primary p-6 text-white text-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
-                  <ShieldCheck className="size-32 -mt-4 -mr-4" />
-                </div>
-                <h3 className="text-2xl font-black mb-1 font-mono tracking-wider">BLACKROOM</h3>
-                <p className="text-sm font-medium opacity-90">디지털 위생 영수증</p>
-              </div>
+            <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200">
               
-              {/* Receipt Body */}
-              <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-                <div className="space-y-2 text-sm border-b border-dashed border-slate-300 dark:border-slate-700 pb-4">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">발급 일시</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleString('ko-KR')}</span>
+              {/* Receipt Content to Capture */}
+              <div ref={receiptRef} className="bg-white text-slate-900 relative">
+                {/* Receipt Header (White Premium) */}
+                <div className="bg-white border-b-2 border-slate-900 p-6 text-center relative overflow-hidden">
+                  <div className="absolute top-0 right-0 opacity-5 pointer-events-none">
+                    <ShieldCheck className="size-32 -mt-4 -mr-4 text-slate-900" />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">시술 식별자</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">#{record.id.slice(0,8).toUpperCase()}</span>
+                  <div className="flex justify-center mb-3">
+                    <div className="size-12 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-lg">
+                      <ShieldCheck className="size-6" />
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">고객 식별정보</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {record.customerName.charAt(0)}{'*'.repeat(record.customerName.length > 2 ? record.customerName.length - 2 : 1)}{record.customerName.length > 2 ? record.customerName.slice(-1) : ''} 고객님
-                    </span>
-                  </div>
+                  <h3 className="text-xl font-black mb-1 font-mono tracking-wider text-slate-900">{settings?.shopName || 'BLACKROOM'}</h3>
+                  <p className="text-xs font-bold tracking-widest text-slate-500 uppercase">Digital Hygiene Certificate</p>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-green-600 dark:text-green-500 mb-2">
-                    <ShieldCheck className="size-5" />
-                    <h4 className="font-bold text-sm">세이프티 가드레일 통과 재료</h4>
+                
+                {/* Receipt Body */}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-3 text-sm border-b border-dashed border-slate-300 pb-5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">발급 번호</span>
+                      <span className="font-mono font-bold text-slate-800">#{record.id.slice(0,8).toUpperCase()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">발급 일시</span>
+                      <span className="font-mono font-bold text-slate-800">{new Date(record.createdAt).toLocaleString('ko-KR')}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">고객명</span>
+                      <span className="font-bold text-slate-800 text-base">
+                        {record.customerName.charAt(0)}{'*'.repeat(record.customerName.length > 2 ? record.customerName.length - 2 : 1)}{record.customerName.length > 2 ? record.customerName.slice(-1) : ''} 고객님
+                      </span>
+                    </div>
                   </div>
-                  
-                  {record.pigment && (
-                    <div className="bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/10">
-                      <p className="text-xs text-slate-500 mb-1 font-bold">사용 색소 (Pigment)</p>
-                      <p className="text-sm font-medium whitespace-pre-wrap">{record.pigment}</p>
-                      <div className="mt-2 flex items-center gap-1 text-[10px] text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded w-fit font-bold">
-                        <CheckCircle2 className="size-3" /> 유통기한 적합 및 안전 확인
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-green-700 mb-2">
+                      <ShieldCheck className="size-5" />
+                      <h4 className="font-black text-sm tracking-tight">AI 세이프티 가드 검증 내역</h4>
+                    </div>
+                    
+                    {record.pigment && (
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="size-16" /></div>
+                        <p className="text-[10px] text-slate-500 mb-1 font-black uppercase tracking-widest">사용 색소 (Pigment)</p>
+                        <p className="text-sm font-bold text-slate-800 whitespace-pre-wrap leading-relaxed relative z-10">{record.pigment}</p>
+                        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-green-700 bg-green-100/50 px-2 py-1.5 rounded-md w-fit font-bold border border-green-200">
+                          <CheckCircle2 className="size-3.5" /> 유효기간 적합 및 안전 검증 완료
+                        </div>
+                      </div>
+                    )}
+
+                    {record.needle && (
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="size-16" /></div>
+                        <p className="text-[10px] text-slate-500 mb-1 font-black uppercase tracking-widest">사용 니들 (Needle)</p>
+                        <p className="text-sm font-bold text-slate-800 whitespace-pre-wrap leading-relaxed relative z-10">{record.needle}</p>
+                        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-green-700 bg-green-100/50 px-2 py-1.5 rounded-md w-fit font-bold border border-green-200">
+                          <CheckCircle2 className="size-3.5" /> 일회용 개봉 및 멸균 상태 확인
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-center mt-6 pt-5 border-t-2 border-slate-900">
+                    <p className="text-xs text-slate-700 leading-relaxed font-bold">
+                      본 시술은 철저한 위생 감염 관리 수칙을 준수하였으며,<br/>안전성이 공식 검증된 정품 재료만을<br/>사용하여 진행되었음을 보증합니다.
+                    </p>
+                    <div className="mt-6 mb-2 flex justify-center">
+                      <div className="border border-slate-300 px-4 py-2 rounded-lg inline-block">
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Official Guarantee</p>
+                        <p className="font-mono font-black text-slate-900 mt-0.5">Powered by BLACKROOM V4</p>
                       </div>
                     </div>
-                  )}
-
-                  {record.needle && (
-                    <div className="bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/10">
-                      <p className="text-xs text-slate-500 mb-1 font-bold">사용 니들 (Needle)</p>
-                      <p className="text-sm font-medium whitespace-pre-wrap">{record.needle}</p>
-                      <div className="mt-2 flex items-center gap-1 text-[10px] text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded w-fit font-bold">
-                        <CheckCircle2 className="size-3" /> 일회용 개봉 및 안전 확인
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-center mt-6 pt-4 border-t border-dashed border-slate-300 dark:border-slate-700">
-                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                    본 시술은 철저한 위생 관리와 안전 검증을 거친<br/>정품/적합 재료만을 사용하여 진행되었습니다.
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-2 font-mono">Powered by BLACKROOM V4</p>
+                  </div>
                 </div>
               </div>
               
-              {/* Receipt Footer */}
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+              {/* Receipt Action Footer (Not captured in image) */}
+              <div className="p-4 bg-slate-50 flex flex-col gap-2 border-t border-slate-200">
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleDownloadReceipt}
+                    disabled={isCapturing}
+                    className="flex-1 py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isCapturing ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
+                    이미지 저장
+                  </button>
+                  <button 
+                    onClick={handleShareReceipt}
+                    disabled={isCapturing}
+                    className="flex-1 py-3.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-primary/20"
+                  >
+                    {isCapturing ? <Loader2 className="size-5 animate-spin" /> : <Share2 className="size-5" />}
+                    고객 공유
+                  </button>
+                </div>
                 <button 
                   onClick={() => setShowReceipt(false)} 
-                  className="w-full py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                  disabled={isCapturing}
+                  className="w-full py-3 bg-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-300 transition-colors disabled:opacity-50 mt-1"
                 >
                   닫기
                 </button>
