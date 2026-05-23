@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Check, Download, Loader2, CheckCircle2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import type { Customer, Consent } from '../types/types';
 
 interface LegalConsentFormProps {
@@ -37,13 +37,10 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({
     if (!formRef.current || isCapturing) return;
     setIsCapturing(true);
     try {
-      const canvas = await html2canvas(formRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
+      const url = await toPng(formRef.current, {
+        pixelRatio: 2,
         backgroundColor: '#ffffff'
       });
-      const url = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = url;
       link.download = `동의서_${customer?.name || '고객'}_${new Date().toISOString().slice(0,10)}.png`;

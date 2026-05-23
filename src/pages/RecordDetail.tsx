@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info, Sparkles, Receipt, ShieldCheck, CheckCircle2, Download, Share2, Loader2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { toPng, toBlob } from 'html-to-image';
 import { useRecords } from '../context/RecordContext';
 import { useSettings } from '../context/SettingsContext';
 import { useCustomers } from '../context/CustomerContext';
@@ -27,13 +27,10 @@ const RecordDetail: React.FC = () => {
     if (!receiptRef.current) return;
     setIsCapturing(true);
     try {
-      const canvas = await html2canvas(receiptRef.current, { 
-        scale: 2, 
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: true
+      const image = await toPng(receiptRef.current, { 
+        pixelRatio: 2,
+        backgroundColor: '#ffffff'
       });
-      const image = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = image;
       link.download = `hygiene-receipt-${id?.slice(0,8)}.png`;
@@ -50,14 +47,11 @@ const RecordDetail: React.FC = () => {
     if (!receiptRef.current) return;
     setIsCapturing(true);
     try {
-      const canvas = await html2canvas(receiptRef.current, { 
-        scale: 2, 
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: true
+      const blob = await toBlob(receiptRef.current, { 
+        pixelRatio: 2,
+        backgroundColor: '#ffffff'
       });
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
+      if (!blob) return;
         const file = new File([blob], 'hygiene-receipt.png', { type: 'image/png' });
         if (navigator.share) {
           await navigator.share({
@@ -65,10 +59,9 @@ const RecordDetail: React.FC = () => {
             text: '안전한 시술을 위한 디지털 위생 영수증입니다.',
             files: [file],
           });
-        } else {
-          alert('이 브라우저에서는 공유 기능을 지원하지 않습니다. 이미지 저장 버튼을 이용해 주세요.');
-        }
-      });
+      } else {
+        alert('이 브라우저에서는 공유 기능을 지원하지 않습니다. 이미지 저장 버튼을 이용해 주세요.');
+      }
     } catch (err) {
       console.error(err);
       alert('공유에 실패했습니다.');
@@ -340,8 +333,8 @@ const RecordDetail: React.FC = () => {
 
         {/* Hygiene Receipt Modal Overlay */}
         {showReceipt && (
-          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200">
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-start bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in zoom-in-95 duration-200 overflow-y-auto">
+            <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 shrink-0 my-auto sm:my-8">
               
               {/* Receipt Content to Capture */}
               <div ref={receiptRef} className="bg-white text-slate-900 relative">
