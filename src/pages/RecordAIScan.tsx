@@ -47,7 +47,7 @@ const CameraScanModal: React.FC<{ onClose: () => void, onComplete: (images: stri
     if (isRecording) return;
     setIsRecording(true);
     const capturedImages: string[] = [];
-    const duration = 3000; // 3 seconds
+    const duration = 6000; // 6 seconds
     const interval = 1000; // 1 frame per second
     let elapsed = 0;
 
@@ -94,9 +94,9 @@ const CameraScanModal: React.FC<{ onClose: () => void, onComplete: (images: stri
         <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
         <canvas ref={canvasRef} className="hidden" />
         
-        {/* 가이드라인 */}
+        {/* 가이드라인 (크기 확대 적용) */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-64 h-64 border-2 border-white/30 rounded-3xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+          <div className="w-11/12 max-w-[340px] h-[450px] border-2 border-white/30 rounded-3xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
             <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-3xl"></div>
             <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-3xl"></div>
             <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-3xl"></div>
