@@ -56,7 +56,7 @@ const RecordDetail: React.FC = () => {
         if (navigator.share) {
           await navigator.share({
             title: '디지털 위생 영수증',
-            text: '안전한 시술을 위한 디지털 위생 영수증입니다.',
+            text: `${settings?.shopName || 'BLACKROOM'}을(를) 찾아주셔서 감사합니다.\n철저한 감염 관리 수칙과 정품 사용 원칙에 따라 안전하게 진행된 고객님의 [디지털 위생 영수증]입니다.`,
             files: [file],
           });
       } else {
