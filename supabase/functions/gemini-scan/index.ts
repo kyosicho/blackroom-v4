@@ -12,9 +12,30 @@ serve(async (req) => {
   }
 
   try {
-    const { base64Image, mimeType } = await req.json();
+    const { images, base64Image, mimeType } = await req.json();
 
-    if (!base64Image) {
+    let imageParts: any[] = [];
+
+    // 다중 이미지 배열 (V4 360도 스캔)
+    if (images && Array.isArray(images) && images.length > 0) {
+      imageParts = images.map((img: any) => ({
+        inline_data: {
+          mime_type: img.mimeType || "image/jpeg",
+          data: img.base64Image,
+        },
+      }));
+    } 
+    // 단일 이미지 (이전 버전 호환성)
+    else if (base64Image) {
+      imageParts = [
+        {
+          inline_data: {
+            mime_type: mimeType || "image/jpeg",
+            data: base64Image,
+          },
+        },
+      ];
+    } else {
       return new Response(
         JSON.stringify({ error: "이미지 데이터가 없습니다." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -31,7 +52,8 @@ serve(async (req) => {
     }
 
     const prompt = `
-      이 이미지는 타투 또는 반영구 시술에 사용되는 바늘(Needle/Cartridge)과 색소(Pigment/Ink) 사진입니다.
+      이 이미지들(다각도 연속 촬영)은 타투 또는 반영구 시술에 사용되는 바늘(Needle/Cartridge)과 색소(Pigment/Ink) 사진입니다.
+      여러 장의 사진을 하나의 문맥으로 종합해서 보세요. 앞면에 적힌 브랜드명과 뒷면에 적힌 LOT/유통기한을 하나의 제품 정보로 합쳐야 합니다.
       포장지, 라벨, 용기에 적힌 아주 작은 글씨까지 꼼꼼하게 읽고, 사진에서 보이는 **모든** 색소와 **모든** 바늘 정보를 빠짐없이 추출해 주세요.
       
       바늘(Needle/Cartridge) 판독 초정밀 가이드:
@@ -48,10 +70,10 @@ serve(async (req) => {
       - "Mixing/Shading Solution"(믹싱/쉐이딩 솔루션)은 잉크 희석액입니다.
       - "Green Soap"(그린솝)은 잉크 클렌저입니다.
       - "pigments" 배열 항목 예: "World Famous Poncho Grey", "Dynamic Union Black", "Intenze Color Mixing Solution"
-      - 제조번호(LOT)가 보이면 별도 필드에 꼭 추출하세요.
+      - 제조번호(LOT)가 여러 각도 중 한 곳이라도 보이면 별도 필드에 꼭 추출하세요.
 
       [V4] 유통기한(Expiration Date) 및 안전성 판독 가이드:
-      - 이미지에서 EXP, Expiration Date, 기한 등의 유통기한 정보를 꼼꼼히 확인하세요.
+      - 다각도 이미지들을 종합해서 EXP, Expiration Date, 기한 등의 유통기한 정보를 꼼꼼히 확인하세요.
       - MFG, PROD 등은 제조일자입니다. EXP가 없고 제조일자만 있다면 통상적으로 제조일로부터 2~3년이 유통기한입니다.
       - 유통기한 정보를 찾았다면 "expirationDate" 필드에 "YYYY-MM-DD" 또는 이미지에 적힌 형태로 적어주세요.
       - 현재 날짜(가정)보다 유통기한이 지났거나, 사진상 변질/오염이 심각해보인다면 "isExpired": true 로 설정하고 "safetyStatus": "danger"로 반환하세요.
@@ -87,12 +109,7 @@ serve(async (req) => {
             {
               parts: [
                 { text: prompt },
-                {
-                  inline_data: {
-                    mime_type: mimeType || "image/jpeg",
-                    data: base64Image,
-                  },
-                },
+                ...imageParts,
               ],
             },
           ],

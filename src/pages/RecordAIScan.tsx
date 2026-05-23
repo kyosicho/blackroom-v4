@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Sparkles, Camera, Plus, ShieldCheck, X } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
@@ -6,6 +6,145 @@ import { useSettings } from '../context/SettingsContext';
 import { getLabelsByMode } from '../utils/constants';
 
 import { compressImage } from '../utils/imageUtils';
+
+// 360도 파노라마 스캔 모달 (내장 카메라)
+const CameraScanModal: React.FC<{ onClose: () => void, onComplete: (images: string[]) => void }> = ({ onClose, onComplete }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    let activeStream: MediaStream | null = null;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(s => {
+        activeStream = s;
+        setStream(s);
+        if (videoRef.current) {
+          videoRef.current.srcObject = s;
+        }
+      })
+      .catch(err => {
+        console.error("Camera access error:", err);
+        alert("카메라 접근 권한이 필요하거나 기기에서 지원하지 않습니다.");
+        onClose();
+      });
+
+    return () => {
+      if (activeStream) {
+        activeStream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [onClose]);
+
+  const handleClose = () => {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    onClose();
+  };
+
+  const startScan = () => {
+    if (isRecording) return;
+    setIsRecording(true);
+    const capturedImages: string[] = [];
+    const duration = 3000; // 3 seconds
+    const interval = 1000; // 1 frame per second
+    let elapsed = 0;
+
+    const captureFrame = () => {
+      if (videoRef.current && canvasRef.current) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // 압축 최적화
+          capturedImages.push(dataUrl);
+        }
+      }
+    };
+
+    // 0초 캡처
+    captureFrame();
+
+    const timer = setInterval(() => {
+      elapsed += interval;
+      setProgress((elapsed / duration) * 100);
+      captureFrame();
+      
+      if (elapsed >= duration) {
+        clearInterval(timer);
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        setTimeout(() => onComplete(capturedImages), 500); // 100% 보여주고 넘어가기 위해 0.5초 딜레이
+      }
+    }, interval);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col font-display animate-in fade-in duration-200">
+      <div className="flex justify-between items-center p-4 text-white z-10 bg-gradient-to-b from-black/60 to-transparent">
+        <button onClick={handleClose} className="p-2"><X className="size-6" /></button>
+        <span className="font-bold">360도 스마트 스캔</span>
+        <div className="size-10"></div>
+      </div>
+      
+      <div className="relative flex-1 overflow-hidden flex items-center justify-center bg-slate-900">
+        <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+        <canvas ref={canvasRef} className="hidden" />
+        
+        {/* 가이드라인 */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-64 h-64 border-2 border-white/30 rounded-3xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-3xl"></div>
+            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-3xl"></div>
+            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-3xl"></div>
+          </div>
+        </div>
+
+        {/* 안내 문구 */}
+        <div className="absolute bottom-16 left-0 right-0 text-center px-4">
+          <div className="inline-block bg-black/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-lg">
+            <p className="text-white font-bold text-sm">
+              {isRecording ? "병을 천천히 한 바퀴 돌려주세요" : "재료를 사각형 안에 맞추고 스캔을 시작하세요"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 컨트롤 영역 */}
+      <div className="h-40 bg-black flex flex-col items-center justify-center px-8 relative pb-safe">
+        {isRecording ? (
+          <div className="w-full max-w-xs animate-in slide-in-from-bottom-4">
+            <div className="flex justify-between text-white text-xs font-bold mb-3 uppercase tracking-widest">
+              <span className="text-primary flex items-center gap-1">
+                <span className="size-2 bg-primary rounded-full animate-pulse"></span>
+                다각도 판독 중...
+              </span>
+              <span>{Math.min(100, Math.round(progress))}%</span>
+            </div>
+            <div className="h-3 w-full bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-primary transition-all duration-1000 ease-linear" style={{ width: `${progress}%` }}></div>
+            </div>
+          </div>
+        ) : (
+          <button 
+            onClick={startScan}
+            className="size-[72px] rounded-full border-4 border-white/80 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform group shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+          >
+            <div className="size-14 rounded-full bg-white flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+              <div className="size-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <Sparkles className="size-4 text-primary" />
+              </div>
+            </div>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const RecordAIScan: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +166,7 @@ const RecordAIScan: React.FC = () => {
   const [afterImage, setAfterImage] = useState<string | undefined>(currentDraft?.afterImage);
   const [additionalImages, setAdditionalImages] = useState<string[]>(currentDraft?.additionalImages || []);
   const [postGuideConfirmed, setPostGuideConfirmed] = useState(currentDraft?.postGuideConfirmed || false);
+  const [isScanning, setIsScanning] = useState(false);
 
   // Hydration sync: currentDraft가 로컬 스토리지에서 나중에 로드될 경우 대비
   React.useEffect(() => {
@@ -68,16 +208,10 @@ const RecordAIScan: React.FC = () => {
     }
   };
 
-  const handleAIScanSource = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    console.log("AI Scan Source Change detected:", file?.name);
-    if (file) {
-      handleImageUpload(file, (dataUrl) => {
-        console.log("Image upload/compression complete, navigating to loading...");
-        // 이미지를 가지고 로딩 페이지로 이동
-        navigate('/scan-loading', { state: { image: dataUrl } });
-      });
-    }
+  const handleScanComplete = (images: string[]) => {
+    setIsScanning(false);
+    console.log("360 Scan complete, captured frames:", images.length);
+    navigate('/scan-loading', { state: { images } });
   };
 
   const handleBeforeImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,33 +313,13 @@ const RecordAIScan: React.FC = () => {
           </div>
         </section>
 
-        {/* AI 판독을 위한 숨겨진 입력창 - label(htmlFor) 연동 방식으로 변경하여 100% 작동 보장 */}
-        <input 
-          id="ai-material-scan-input"
-          type="file" 
-          accept="image/*" 
-          className="opacity-0 pointer-events-none absolute w-0 h-0" 
-          onChange={(e) => {
-            handleAIScanSource(e);
-            // 동일 파일 재선택 가능하도록 값 초기화
-            e.target.value = '';
-          }} 
-        />
-
-        {/* Procedure Details */}
-        <section className="px-4 py-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 opacity-70">{labels.procedure} 상세 정보</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between mb-1.5 ml-1">
-                <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">사용 {labels.pigment}</span>
-                <label 
-                  htmlFor="ai-material-scan-input"
+                <button 
+                  onClick={() => setIsScanning(true)}
                   className="flex items-center gap-1.5 text-white bg-primary hover:bg-primary/90 transition-colors px-3 py-1 rounded-full cursor-pointer shadow-md shadow-primary/20"
                 >
-                  <Sparkles className="size-3.5 pointer-events-none" />
-                  <span className="text-xs font-bold uppercase pointer-events-none">AI 판독</span>
-                </label>
+                  <Sparkles className="size-3.5" />
+                  <span className="text-xs font-bold uppercase">AI 360° 스캔</span>
+                </button>
               </div>
               <div className="flex flex-col gap-2">
                 {pigments.map((p, index) => (
@@ -242,13 +356,13 @@ const RecordAIScan: React.FC = () => {
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-1.5 ml-1">
                 <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">니들 구성</span>
-                <label 
-                  htmlFor="ai-material-scan-input"
+                <button 
+                  onClick={() => setIsScanning(true)}
                   className="flex items-center gap-1.5 text-white bg-primary hover:bg-primary/90 transition-colors px-3 py-1 rounded-full cursor-pointer shadow-md shadow-primary/20"
                 >
-                  <Sparkles className="size-3.5 pointer-events-none" />
-                  <span className="text-xs font-bold uppercase pointer-events-none">AI 판독</span>
-                </label>
+                  <Sparkles className="size-3.5" />
+                  <span className="text-xs font-bold uppercase">AI 360° 스캔</span>
+                </button>
               </div>
               <div className="flex flex-col gap-2">
                 {needles.map((n, index) => (
@@ -399,6 +513,14 @@ const RecordAIScan: React.FC = () => {
           </div>
         </section>
       </main>
+
+      {/* 360도 스캔 모달 */}
+      {isScanning && (
+        <CameraScanModal 
+          onClose={() => setIsScanning(false)} 
+          onComplete={handleScanComplete} 
+        />
+      )}
     </div>
   );
 };

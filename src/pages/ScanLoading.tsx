@@ -10,10 +10,13 @@ const ScanLoading: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const scannedImage = location.state?.image;
+  const rawImages = location.state?.images;
+  const rawImage = location.state?.image;
 
   useEffect(() => {
-    if (!scannedImage) {
+    const scannedImages = rawImages || (rawImage ? [rawImage] : null);
+
+    if (!scannedImages || scannedImages.length === 0) {
       alert('판독할 이미지가 없습니다.');
       navigate(-1);
       return;
@@ -28,8 +31,8 @@ const ScanLoading: React.FC = () => {
           setProgress((prev) => (prev < 90 ? prev + 1 : prev));
         }, 30);
 
-        // 실제 AI 스캔 요청
-        const result = await scanMaterialImage(scannedImage);
+        // 실제 AI 스캔 요청 (다중 이미지 배열 전달)
+        const result = await scanMaterialImage(scannedImages);
         
         // 성공 시 100% 채우고 결과 페이지로 이동
         clearInterval(progressInterval);
@@ -54,7 +57,7 @@ const ScanLoading: React.FC = () => {
     return () => {
       if (progressInterval) clearInterval(progressInterval);
     };
-  }, [navigate, scannedImage]);
+  }, [navigate, rawImages, rawImage]);
 
   if (error) {
     return (
