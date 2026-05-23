@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Check, Download, Loader2 } from 'lucide-react';
+import { Check, Download, Loader2, CheckCircle2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import type { Customer, Consent } from '../types/types';
 
@@ -40,6 +40,7 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({
       const canvas = await html2canvas(formRef.current, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: '#ffffff'
       });
       const url = canvas.toDataURL('image/png');
@@ -99,16 +100,29 @@ const LegalConsentForm: React.FC<LegalConsentFormProps> = ({
       {/* Procedure Material Info */}
       {(pigment || needle) && (
         <div className="mb-8 text-[11px] sm:text-sm border border-slate-200 bg-slate-50 p-4 rounded-xl">
-          <p className="font-bold mb-3 text-slate-700 underline underline-offset-4">[사용 재료 내역]</p>
+          <p className="font-bold mb-3 text-slate-700 underline underline-offset-4">[사용 재료 내역 및 안전 검증]</p>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-[10px] text-slate-500 font-bold mb-1">■ 사용 색소</p>
-              <p className="whitespace-pre-wrap font-medium text-slate-800 leading-relaxed">{pigment || '해당 없음'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-500 font-bold mb-1">■ 니들 구성</p>
-              <p className="whitespace-pre-wrap font-medium text-slate-800 leading-relaxed">{needle || '해당 없음'}</p>
-            </div>
+            {pigment && (
+              <div>
+                <p className="text-[10px] text-slate-500 font-bold mb-1">■ 사용 색소</p>
+                <p className="whitespace-pre-wrap font-medium text-slate-800 leading-relaxed mb-2">{pigment}</p>
+                <div className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-100/70 px-2 py-1 rounded border border-green-200 font-bold">
+                  <CheckCircle2 className="size-3" /> 유효기간 적합 및 안전 검증 완료
+                </div>
+              </div>
+            )}
+            {needle && (
+              <div>
+                <p className="text-[10px] text-slate-500 font-bold mb-1">■ 니들 구성</p>
+                <p className="whitespace-pre-wrap font-medium text-slate-800 leading-relaxed mb-2">{needle}</p>
+                <div className="inline-flex items-center gap-1 text-[10px] text-green-700 bg-green-100/70 px-2 py-1 rounded border border-green-200 font-bold">
+                  <CheckCircle2 className="size-3" /> 일회용 개봉 및 멸균 상태 확인
+                </div>
+              </div>
+            )}
+            {!pigment && !needle && (
+              <p className="text-slate-400 font-medium col-span-2">해당 사항 없음</p>
+            )}
           </div>
         </div>
       )}

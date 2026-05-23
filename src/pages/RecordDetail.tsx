@@ -27,7 +27,12 @@ const RecordDetail: React.FC = () => {
     if (!receiptRef.current) return;
     setIsCapturing(true);
     try {
-      const canvas = await html2canvas(receiptRef.current, { scale: 2, backgroundColor: '#ffffff' });
+      const canvas = await html2canvas(receiptRef.current, { 
+        scale: 2, 
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        allowTaint: true
+      });
       const image = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = image;
@@ -45,7 +50,12 @@ const RecordDetail: React.FC = () => {
     if (!receiptRef.current) return;
     setIsCapturing(true);
     try {
-      const canvas = await html2canvas(receiptRef.current, { scale: 2, backgroundColor: '#ffffff' });
+      const canvas = await html2canvas(receiptRef.current, { 
+        scale: 2, 
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        allowTaint: true
+      });
       canvas.toBlob(async (blob) => {
         if (!blob) return;
         const file = new File([blob], 'hygiene-receipt.png', { type: 'image/png' });
@@ -445,15 +455,17 @@ const RecordDetail: React.FC = () => {
       </main>
 
       {/* Floating Action Button for Receipt */}
-      <div className="fixed bottom-6 inset-x-0 flex justify-center pointer-events-none z-50">
-        <button 
-          onClick={() => setShowReceipt(true)}
-          className="pointer-events-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-4 rounded-full font-black text-sm flex items-center gap-2 shadow-2xl shadow-slate-900/20 active:scale-95 transition-all"
-        >
-          <Receipt className="size-5" />
-          디지털 위생 영수증 발행
-        </button>
-      </div>
+      {!showConsent && !showReceipt && (
+        <div className="fixed bottom-6 inset-x-0 flex justify-center pointer-events-none z-50">
+          <button 
+            onClick={() => setShowReceipt(true)}
+            className="pointer-events-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-4 rounded-full font-black text-sm flex items-center gap-2 shadow-2xl shadow-slate-900/20 active:scale-95 transition-all"
+          >
+            <Receipt className="size-5" />
+            디지털 위생 영수증 발행
+          </button>
+        </div>
+      )}
     </div>
   );
 };
