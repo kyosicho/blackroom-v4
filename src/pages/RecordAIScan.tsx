@@ -507,7 +507,7 @@ const RecordAIScan: React.FC = () => {
                 className="size-6 rounded-lg border-white/30 bg-transparent text-white focus:ring-white transition-all"
               />
               <label htmlFor="guideConfirm" className="text-white font-bold text-sm cursor-pointer">
-                {labels.guide} 완료
+                {labels.guide} 설명 완료
               </label>
             </div>
 

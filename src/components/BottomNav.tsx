@@ -17,7 +17,7 @@ const BottomNav: React.FC = () => {
   ];
 
   // Hide on certain pages
-  const hiddenPaths = ['/scan-loading', '/scan-result', '/gps-auth', '/consent'];
+  const hiddenPaths = ['/scan-loading', '/scan-result', '/gps-auth', '/consent', '/record', '/appointment', '/customer'];
   if (hiddenPaths.some(p => location.pathname.startsWith(p))) return null;
 
   return (
