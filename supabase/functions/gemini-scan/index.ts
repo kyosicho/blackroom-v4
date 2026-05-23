@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { images, base64Image, mimeType } = await req.json();
+    const { images, base64Image, mimeType, currentDate } = await req.json();
 
     let imageParts: any[] = [];
 
@@ -53,6 +53,7 @@ serve(async (req) => {
 
     const prompt = `
       이 이미지들(다각도 연속 촬영)은 타투 또는 반영구 시술에 사용되는 바늘(Needle/Cartridge)과 색소(Pigment/Ink) 사진입니다.
+      ${currentDate ? `현재 날짜는 ${currentDate} 입니다.` : ''}
       여러 장의 사진을 하나의 문맥으로 종합해서 보세요. 앞면에 적힌 브랜드명과 뒷면에 적힌 LOT/유통기한을 하나의 제품 정보로 합쳐야 합니다.
       포장지, 라벨, 용기에 적힌 아주 작은 글씨까지 꼼꼼하게 읽고, 사진에서 보이는 **모든** 색소와 **모든** 바늘 정보를 빠짐없이 추출해 주세요.
       
@@ -77,7 +78,7 @@ serve(async (req) => {
       - MFG, PROD 등은 제조일자입니다. **중요: 유통기한(EXP)이 명시적으로 적혀있지 않다면 임의로 3년 등 기간을 계산하거나 추측하지 마세요.** 오직 이미지에 보이는 글자만 인식하세요.
       - 명시적인 유통기한이 적혀있는 경우에만 "expirationDate" 필드에 "YYYY-MM-DD" 형태로 적어주세요.
       - 병에 유통기한이 명시되어 있지 않으면 "expirationDate" 필드는 "" (빈 문자열)로 남겨두세요.
-      - 명시된 유통기한이 현재 날짜보다 지났거나 변질/오염이 심각해 보인다면 "isExpired": true, "safetyStatus": "danger"로 반환하세요.
+      - 명시된 유통기한이 현재 날짜(${currentDate || '오늘'})보다 지났거나 변질/오염이 심각해 보인다면 "isExpired": true, "safetyStatus": "danger"로 반환하세요.
       - 명시된 유통기한이 넉넉하고 정상적이면 "isExpired": false, "safetyStatus": "safe"로 반환하세요.
       - 유통기한을 명확히 알 수 없지만 안전해 보이면 "safetyStatus": "warning", "isExpired": false 로 반환하세요.
 
