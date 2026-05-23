@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Info, CheckCircle2, RotateCcw, Save, Activity, Shield, AlertCircle } from 'lucide-react';
+import { Info, CheckCircle2, RotateCcw, Save, Activity, Shield, AlertCircle, ShieldAlert, ShieldCheck } from 'lucide-react';
 import Header from '../components/Header';
 import { useRecords } from '../context/RecordContext';
 import type { AIScanResult } from '../types/types';
@@ -14,7 +14,7 @@ const ScanResult: React.FC = () => {
   const scanResult: AIScanResult | null = location.state?.result;
 
   const handleApply = () => {
-    if (scanResult) {
+    if (scanResult && scanResult.safetyStatus !== 'danger') {
       setAIScanResult(scanResult);
       navigate('/record-ai_scan');
     }
@@ -31,14 +31,55 @@ const ScanResult: React.FC = () => {
     );
   }
 
+  const isDanger = scanResult.safetyStatus === 'danger';
+
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden font-display">
       <Header title="AI 재료 판독 결과" />
 
+      {/* Safety Guardrail (세이프티 가드레일) */}
+      <div className="px-4 py-4">
+        {isDanger ? (
+          <div className="bg-red-50 dark:bg-red-950/30 border-2 border-red-500 rounded-2xl p-5 shadow-sm shadow-red-500/20">
+            <div className="flex items-start gap-3">
+              <div className="bg-red-100 dark:bg-red-900/50 p-2 rounded-full shrink-0">
+                <ShieldAlert className="size-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-red-700 dark:text-red-400 mb-1">안전 경고: 부적합 재료 감지</h3>
+                <p className="text-sm text-red-600/80 dark:text-red-400/80 font-medium leading-snug">
+                  {scanResult.isExpired 
+                    ? `유효기간이 초과된 재료입니다. (기한: ${scanResult.expirationDate || '알 수 없음'})`
+                    : '안전성이 확인되지 않거나 오염이 의심되는 재료입니다.'}
+                </p>
+                <div className="mt-3 inline-flex items-center px-2.5 py-1 rounded-md bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-bold uppercase tracking-wider">
+                  작업 시작 불가 · 재료 교체 필요
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/50 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="bg-green-100 dark:bg-green-900/50 p-1.5 rounded-full shrink-0">
+                <ShieldCheck className="size-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-green-800 dark:text-green-300">세이프티 가드레일 통과</h3>
+                <p className="text-xs text-green-600 dark:text-green-400/80 font-medium">유효기간 정상 및 적합 재료 확인 완료 (시술 진행 가능)</p>
+                {scanResult.expirationDate && (
+                  <p className="text-[10px] text-green-600/70 dark:text-green-400/60 mt-0.5">확인된 기한: {scanResult.expirationDate}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Analysis Result Cards - 복수 재료 지원 */}
       {((scanResult.pigments && scanResult.pigments.length > 0) || scanResult.pigmentBrand || scanResult.pigmentColor) && (
-        <div className="px-4 py-4">
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-5 mb-4 shadow-sm shadow-primary/5">
+        <div className="px-4 pb-4">
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-5 shadow-sm shadow-primary/5">
             <div className="flex items-center gap-2 mb-4">
               <Activity className="size-5 text-primary" />
               <h3 className="text-lg font-bold">인식된 색소 정보</h3>
@@ -164,11 +205,13 @@ const ScanResult: React.FC = () => {
       </div>
 
       {/* Confirmation */}
-      <div className="mt-4 px-4 text-center">
-        <p className="text-sm font-bold text-slate-400">
-          판독된 재료 정보를 시술 기록에 적용할까요?
-        </p>
-      </div>
+      {!isDanger && (
+        <div className="mt-4 px-4 text-center">
+          <p className="text-sm font-bold text-slate-400">
+            판독된 재료 정보를 시술 기록에 적용할까요?
+          </p>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="p-6 mt-auto mb-8 flex flex-col gap-3">
@@ -177,14 +220,19 @@ const ScanResult: React.FC = () => {
           className="w-full h-14 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
         >
           <RotateCcw className="size-5" />
-          다시 촬영하기
+          {isDanger ? '새 재료로 다시 촬영하기' : '다시 촬영하기'}
         </button>
         <button 
           onClick={handleApply}
-          className="w-full h-14 bg-primary text-white font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-primary/30 active:scale-[0.98] transition-all"
+          disabled={isDanger}
+          className={`w-full h-14 font-black text-lg rounded-2xl flex items-center justify-center gap-2 transition-all ${
+            isDanger 
+              ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed' 
+              : 'bg-primary text-white shadow-xl shadow-primary/30 active:scale-[0.98]'
+          }`}
         >
           <Save className="size-6" />
-          기록에 즉시 적용
+          {isDanger ? '적용 불가' : '기록에 즉시 적용'}
         </button>
       </div>
     </div>

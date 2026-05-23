@@ -50,6 +50,14 @@ serve(async (req) => {
       - "pigments" 배열 항목 예: "World Famous Poncho Grey", "Dynamic Union Black", "Intenze Color Mixing Solution"
       - 제조번호(LOT)가 보이면 별도 필드에 꼭 추출하세요.
 
+      [V4] 유통기한(Expiration Date) 및 안전성 판독 가이드:
+      - 이미지에서 EXP, Expiration Date, 기한 등의 유통기한 정보를 꼼꼼히 확인하세요.
+      - MFG, PROD 등은 제조일자입니다. EXP가 없고 제조일자만 있다면 통상적으로 제조일로부터 2~3년이 유통기한입니다.
+      - 유통기한 정보를 찾았다면 "expirationDate" 필드에 "YYYY-MM-DD" 또는 이미지에 적힌 형태로 적어주세요.
+      - 현재 날짜(가정)보다 유통기한이 지났거나, 사진상 변질/오염이 심각해보인다면 "isExpired": true 로 설정하고 "safetyStatus": "danger"로 반환하세요.
+      - 기한이 넉넉하고 정상적이면 "isExpired": false, "safetyStatus": "safe"로 반환하세요.
+      - 기한을 알 수 없지만 안전해 보이면 "safetyStatus": "warning", "isExpired": false 로 반환하세요.
+
       정확한 JSON 형식으로만 응답해 주세요:
       {
         "pigments": ["브랜드 컬러명1", "브랜드 컬러명2"],
@@ -59,6 +67,9 @@ serve(async (req) => {
         "lotNumber": "제조번호 (없으면 빈 문자열)",
         "needleType": "대표 형태 (없으면 빈 문자열)",
         "needleSize": "대표 굵기 (없으면 빈 문자열)",
+        "expirationDate": "유통기한 (없으면 빈 문자열)",
+        "isExpired": false,
+        "safetyStatus": "safe",
         "notes": "추가 분석 메모 (한국어로 작성, 바늘의 특징이나 용도 등 포함)"
       }
 
@@ -127,6 +138,9 @@ serve(async (req) => {
       lotNumber: sanitize(parsed.lotNumber),
       needleType: sanitize(parsed.needleType),
       needleSize: sanitize(parsed.needleSize),
+      expirationDate: sanitize(parsed.expirationDate),
+      isExpired: Boolean(parsed.isExpired),
+      safetyStatus: (sanitize(parsed.safetyStatus) || 'safe') as 'safe' | 'warning' | 'danger',
       notes: sanitize(parsed.notes) || "AI 분석 완료",
       scannedAt: new Date().toISOString(),
       pigments: sanitizeArray(parsed.pigments),

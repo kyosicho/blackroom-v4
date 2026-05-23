@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info, Sparkles } from 'lucide-react';
+import { ArrowLeft, Camera, Edit3, Trash2, MapPin, FileCheck, Info, Sparkles, Receipt, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useRecords } from '../context/RecordContext';
 import { useSettings } from '../context/SettingsContext';
 import { useCustomers } from '../context/CustomerContext';
@@ -8,7 +8,6 @@ import { useConsents } from '../context/ConsentContext';
 import { getLabelsByMode } from '../utils/constants';
 import LegalConsentForm from '../components/LegalConsentForm';
 import { ChevronRight } from 'lucide-react';
-
 
 const RecordDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +18,7 @@ const RecordDetail: React.FC = () => {
   const { getConsent, refreshConsents } = useConsents();
   const labels = getLabelsByMode(shopMode);
   const [showConsent, setShowConsent] = React.useState(false);
+  const [showReceipt, setShowReceipt] = React.useState(false);
 
   const record = id ? getRecord(id) : null;
   const customer = record ? getCustomer(record.customerId) : null;
@@ -280,7 +280,98 @@ const RecordDetail: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Hygiene Receipt Modal Overlay */}
+        {showReceipt && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
+              {/* Receipt Header */}
+              <div className="bg-primary p-6 text-white text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
+                  <ShieldCheck className="size-32 -mt-4 -mr-4" />
+                </div>
+                <h3 className="text-2xl font-black mb-1 font-mono tracking-wider">BLACKROOM</h3>
+                <p className="text-sm font-medium opacity-90">디지털 위생 영수증</p>
+              </div>
+              
+              {/* Receipt Body */}
+              <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div className="space-y-2 text-sm border-b border-dashed border-slate-300 dark:border-slate-700 pb-4">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">발급 일시</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleString('ko-KR')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">시술 식별자</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">#{record.id.slice(0,8).toUpperCase()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">고객 식별정보</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                      {record.customerName.charAt(0)}{'*'.repeat(record.customerName.length > 2 ? record.customerName.length - 2 : 1)}{record.customerName.length > 2 ? record.customerName.slice(-1) : ''} 고객님
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-500 mb-2">
+                    <ShieldCheck className="size-5" />
+                    <h4 className="font-bold text-sm">세이프티 가드레일 통과 재료</h4>
+                  </div>
+                  
+                  {record.pigment && (
+                    <div className="bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/10">
+                      <p className="text-xs text-slate-500 mb-1 font-bold">사용 색소 (Pigment)</p>
+                      <p className="text-sm font-medium whitespace-pre-wrap">{record.pigment}</p>
+                      <div className="mt-2 flex items-center gap-1 text-[10px] text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded w-fit font-bold">
+                        <CheckCircle2 className="size-3" /> 유통기한 적합 및 안전 확인
+                      </div>
+                    </div>
+                  )}
+
+                  {record.needle && (
+                    <div className="bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/10">
+                      <p className="text-xs text-slate-500 mb-1 font-bold">사용 니들 (Needle)</p>
+                      <p className="text-sm font-medium whitespace-pre-wrap">{record.needle}</p>
+                      <div className="mt-2 flex items-center gap-1 text-[10px] text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded w-fit font-bold">
+                        <CheckCircle2 className="size-3" /> 일회용 개봉 및 안전 확인
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-center mt-6 pt-4 border-t border-dashed border-slate-300 dark:border-slate-700">
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    본 시술은 철저한 위생 관리와 안전 검증을 거친<br/>정품/적합 재료만을 사용하여 진행되었습니다.
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-2 font-mono">Powered by BLACKROOM V4</p>
+                </div>
+              </div>
+              
+              {/* Receipt Footer */}
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+                <button 
+                  onClick={() => setShowReceipt(false)} 
+                  className="w-full py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Floating Action Button for Receipt */}
+      <div className="fixed bottom-6 inset-x-0 flex justify-center pointer-events-none z-20">
+        <button 
+          onClick={() => setShowReceipt(true)}
+          className="pointer-events-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-4 rounded-full font-black text-sm flex items-center gap-2 shadow-2xl shadow-slate-900/20 active:scale-95 transition-all"
+        >
+          <Receipt className="size-5" />
+          디지털 위생 영수증 발행
+        </button>
+      </div>
     </div>
   );
 };

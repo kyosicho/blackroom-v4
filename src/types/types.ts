@@ -81,6 +81,10 @@ export interface AIScanResult {
   // 복수 재료 지원 (v1.2)
   pigments?: string[];   // 인식된 모든 색소 목록
   needles?: string[];    // 인식된 모든 니들 목록
+  // 세이프티 가드레일 지원 (v4)
+  isExpired?: boolean;
+  expirationDate?: string;
+  safetyStatus?: 'safe' | 'warning' | 'danger';
 }
 
 export type ShopMode = 'pmu' | 'tattoo';
