@@ -356,45 +356,45 @@ const RecordDetail: React.FC = () => {
                 <div className="p-6 space-y-6">
                   <div className="space-y-3 text-sm border-b border-dashed border-slate-300 pb-5">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">발급 번호</span>
-                      <span className="font-mono font-bold text-slate-800">#{record.id.slice(0,8).toUpperCase()}</span>
+                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider whitespace-nowrap break-keep">발급 번호</span>
+                      <span className="font-mono font-bold text-slate-800 text-right">#{record.id.slice(0,8).toUpperCase()}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">발급 일시</span>
-                      <span className="font-mono font-bold text-slate-800">{new Date(record.createdAt).toLocaleString('ko-KR')}</span>
+                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider whitespace-nowrap break-keep">발급 일시</span>
+                      <span className="font-mono font-bold text-slate-800 text-right">{new Date(record.createdAt).toLocaleString('ko-KR')}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">고객명</span>
-                      <span className="font-bold text-slate-800 text-base">
+                      <span className="text-slate-500 font-bold text-xs uppercase tracking-wider whitespace-nowrap break-keep">고객명</span>
+                      <span className="font-bold text-slate-800 text-base text-right">
                         {record.customerName.charAt(0)}{'*'.repeat(record.customerName.length > 2 ? record.customerName.length - 2 : 1)}{record.customerName.length > 2 ? record.customerName.slice(-1) : ''} 고객님
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-green-700 mb-2">
-                      <ShieldCheck className="size-5" />
+                    <div className="flex items-center gap-2 text-green-700 mb-2 whitespace-nowrap break-keep">
+                      <ShieldCheck className="size-5 shrink-0" />
                       <h4 className="font-black text-sm tracking-tight">AI 세이프티 가드 검증 내역</h4>
                     </div>
                     
                     {record.pigment && (
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-2 opacity-15 text-green-600"><CheckCircle2 className="size-16" /></div>
-                        <p className="text-[10px] text-slate-500 mb-1 font-black uppercase tracking-widest">사용 색소 (Pigment)</p>
+                        <div className="absolute top-0 right-0 p-2 opacity-15 text-green-600"><CheckCircle2 className="size-16 shrink-0" /></div>
+                        <p className="text-[10px] text-slate-500 mb-1 font-black uppercase tracking-widest whitespace-nowrap break-keep">사용 색소 (Pigment)</p>
                         <p className="text-sm font-bold text-slate-800 whitespace-pre-wrap leading-relaxed relative z-10">{record.pigment}</p>
-                        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-green-700 bg-green-100/50 px-2 py-1.5 rounded-md w-fit font-bold border border-green-200">
-                          <CheckCircle2 className="size-3.5" /> 유효기간 적합 및 안전 검증 완료
+                        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-green-700 bg-green-100/50 px-2 py-1.5 rounded-md w-fit font-bold border border-green-200 whitespace-nowrap break-keep">
+                          <CheckCircle2 className="size-3.5 shrink-0" /> 유효기간 적합 및 안전 검증 완료
                         </div>
                       </div>
                     )}
 
                     {record.needle && (
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-2 opacity-15 text-green-600"><CheckCircle2 className="size-16" /></div>
-                        <p className="text-[10px] text-slate-500 mb-1 font-black uppercase tracking-widest">사용 니들 (Needle)</p>
+                        <div className="absolute top-0 right-0 p-2 opacity-15 text-green-600"><CheckCircle2 className="size-16 shrink-0" /></div>
+                        <p className="text-[10px] text-slate-500 mb-1 font-black uppercase tracking-widest whitespace-nowrap break-keep">사용 니들 (Needle)</p>
                         <p className="text-sm font-bold text-slate-800 whitespace-pre-wrap leading-relaxed relative z-10">{record.needle}</p>
-                        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-green-700 bg-green-100/50 px-2 py-1.5 rounded-md w-fit font-bold border border-green-200">
-                          <CheckCircle2 className="size-3.5" /> 일회용 개봉 및 멸균 상태 확인
+                        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-green-700 bg-green-100/50 px-2 py-1.5 rounded-md w-fit font-bold border border-green-200 whitespace-nowrap break-keep">
+                          <CheckCircle2 className="size-3.5 shrink-0" /> 일회용 개봉 및 멸균 상태 확인
                         </div>
                       </div>
                     )}
