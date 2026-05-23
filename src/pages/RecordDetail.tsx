@@ -379,7 +379,7 @@ const RecordDetail: React.FC = () => {
                     
                     {record.pigment && (
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="size-16" /></div>
+                        <div className="absolute top-0 right-0 p-2 opacity-15 text-green-600"><CheckCircle2 className="size-16" /></div>
                         <p className="text-[10px] text-slate-500 mb-1 font-black uppercase tracking-widest">사용 색소 (Pigment)</p>
                         <p className="text-sm font-bold text-slate-800 whitespace-pre-wrap leading-relaxed relative z-10">{record.pigment}</p>
                         <div className="mt-3 flex items-center gap-1.5 text-[11px] text-green-700 bg-green-100/50 px-2 py-1.5 rounded-md w-fit font-bold border border-green-200">
@@ -390,7 +390,7 @@ const RecordDetail: React.FC = () => {
 
                     {record.needle && (
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-2 opacity-10"><CheckCircle2 className="size-16" /></div>
+                        <div className="absolute top-0 right-0 p-2 opacity-15 text-green-600"><CheckCircle2 className="size-16" /></div>
                         <p className="text-[10px] text-slate-500 mb-1 font-black uppercase tracking-widest">사용 니들 (Needle)</p>
                         <p className="text-sm font-bold text-slate-800 whitespace-pre-wrap leading-relaxed relative z-10">{record.needle}</p>
                         <div className="mt-3 flex items-center gap-1.5 text-[11px] text-green-700 bg-green-100/50 px-2 py-1.5 rounded-md w-fit font-bold border border-green-200">
