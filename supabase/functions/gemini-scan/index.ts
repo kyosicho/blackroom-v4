@@ -73,13 +73,13 @@ serve(async (req) => {
       - 제조번호(LOT)가 여러 각도 중 한 곳이라도 보이면 별도 필드에 꼭 추출하세요.
 
       [V4] 유통기한(Expiration Date) 및 안전성 판독 가이드:
-      - 다각도 이미지들을 종합해서 EXP, Expiration Date, 기한 등의 유통기한 정보를 꼼꼼히 확인하세요.
-      - MFG, PROD 등은 제조일자입니다. **중요: 만약 명확한 EXP(유통기한) 표기가 없고 제조일자(MFG)만 있다면, 타투 잉크의 유통기한은 통상적으로 제조일로부터 정확히 3년(36개월)입니다.** 일관되게 3년 후로 계산해 주세요. (예: 제조일이 220324(2022년 3월 24일)라면 유통기한은 2025년 3월 24일입니다.)
-      - 숫자 6자리(예: 220324)는 보통 YYMMDD (22년 03월 24일) 형식을 의미합니다.
-      - 유통기한 정보를 찾았거나 계산했다면 "expirationDate" 필드에 "YYYY-MM-DD" 형태로 통일해서 적어주세요. (예: "2025-03-24")
-      - 현재 날짜(가정)보다 유통기한이 지났거나, 사진상 변질/오염이 심각해보인다면 "isExpired": true 로 설정하고 "safetyStatus": "danger"로 반환하세요.
-      - 기한이 넉넉하고 정상적이면 "isExpired": false, "safetyStatus": "safe"로 반환하세요.
-      - 기한을 알 수 없지만 안전해 보이면 "safetyStatus": "warning", "isExpired": false 로 반환하세요.
+      - 다각도 이미지들을 종합해서 EXP, BEST BY, Expiration Date 등 명시적인 유통기한 정보가 병에 적혀 있는지 꼼꼼히 확인하세요.
+      - MFG, PROD 등은 제조일자입니다. **중요: 유통기한(EXP)이 명시적으로 적혀있지 않다면 임의로 3년 등 기간을 계산하거나 추측하지 마세요.** 오직 이미지에 보이는 글자만 인식하세요.
+      - 명시적인 유통기한이 적혀있는 경우에만 "expirationDate" 필드에 "YYYY-MM-DD" 형태로 적어주세요.
+      - 병에 유통기한이 명시되어 있지 않으면 "expirationDate" 필드는 "" (빈 문자열)로 남겨두세요.
+      - 명시된 유통기한이 현재 날짜보다 지났거나 변질/오염이 심각해 보인다면 "isExpired": true, "safetyStatus": "danger"로 반환하세요.
+      - 명시된 유통기한이 넉넉하고 정상적이면 "isExpired": false, "safetyStatus": "safe"로 반환하세요.
+      - 유통기한을 명확히 알 수 없지만 안전해 보이면 "safetyStatus": "warning", "isExpired": false 로 반환하세요.
 
       정확한 JSON 형식으로만 응답해 주세요:
       {
